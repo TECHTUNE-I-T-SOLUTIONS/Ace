@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  student
+  administrator
+  super_administrator
+}
+
+enum TaskPriority {
+  low
+  medium
+  high
+}
+
+enum TaskStatus {
+  todo
+  doing
+  done
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  role      Role     @default(student)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  profile   Profile?
+  courses   Course[]
+  assignments Assignment[]
+  tests     Test[]
+  exams     Exam[]
+  studySessions StudySession[]
+  tasks     Task[]
+}
+
+model Profile {
+  id            String  @id @default(cuid())
+  userId        String  @unique
+  fullName      String
+  avatarUrl     String?
+  institution   String?
+  department    String?
+  level         String?
+  user          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id             String   @id @default(cuid())
+  userId         String
+  courseCode     String
+  courseTitle    String
+  lecturerName   String?
+  lecturerPhone  String?
+  lecturerEmail  String?
+  venue          String?
+  dayOfWeek      String?
+  startTime      String?
+  endTime        String?
+  creditUnit     Int?
+  semester       String?
+  academicSession String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignments    Assignment[]
+  tests          Test[]
+  exams          Exam[]
+}
+
+model Assignment {
+  id           String   @id @default(cuid())
+  userId       String
+  courseId     String
+  title        String
+  description  String?
+  priority     TaskPriority
+  deadlineDate String
+  deadlineTime String?
+  status       TaskStatus @default(todo)
+  attachments  Json?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Test {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+  title    String
+  date     String
+  time     String?
+  venue    String?
+  notes    String?
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model Exam {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+  title    String
+  date     String
+  time     String?
+  venue    String?
+  seatInfo String?
+  notes    String?
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+}
+
+model StudySession {
+  id                String @id @default(cuid())
+  userId            String
+  subject           String
+  goal              String
+  location          String?
+  date              String
+  startTime         String
+  endTime           String
+  completionStatus  String
+  user              User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  category    String
+  priority    TaskPriority
+  status      TaskStatus
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

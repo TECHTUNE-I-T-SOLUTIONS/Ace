@@ -1,0 +1,13 @@
+node_modules
+coverage
+.dist
+backend/node_modules
+backend/dist
+backend/.env.local
+.env.local
+*.log
+.DS_Store
+.vscode
+.idea
+.expo
+.expo-shared
