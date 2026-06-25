@@ -24,12 +24,19 @@ export async function pickImage() {
 
 export async function uploadToSupabase(bucket: string, uri: string, path: string) {
   if (!supabase) throw new Error('Supabase not configured');
+  
   const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-  const blob = new Blob([Uint8Array.from(atob(base64), (char) => char.charCodeAt(0))]);
-  const { error } = await supabase.storage.from(bucket).upload(path, blob, {
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  
+  const { error } = await supabase.storage.from(bucket).upload(path, bytes.buffer, {
     upsert: true,
-    contentType: blob.type || (bucket === 'avatars' ? 'image/jpeg' : 'application/octet-stream'),
+    contentType: bucket === 'avatars' ? 'image/jpeg' : 'application/octet-stream',
   });
+  
   if (error) throw error;
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;

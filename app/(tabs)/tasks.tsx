@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassCard, GradientShell, PrimaryButton } from '@/components';
+import { colors } from '@/theme';
 import { CrudModal } from '@/crud-modal';
 import { apiGet, apiGetWithQuery } from '@/api';
 import { createItem, deleteItem, updateItem } from '@/api-hooks';
@@ -74,12 +75,16 @@ export default function Tasks() {
   return (
     <GradientShell>
       <View style={styles.header}>
-        <Text style={styles.title}>Tasks</Text>
+        <View style={styles.headerTop}>
+          <Text style={styles.title}>Daily Tasks</Text>
+          <PrimaryButton title="Add New" icon="add" onPress={() => open()} variant="light" />
+        </View>
         <View style={styles.counterRow}>
-          <Counter label="Pending" value={String(analytics?.tasks ?? pending)} />
-          <Counter label="Completed" value={String(completed)} />
+          <Counter label="Pending" value={String(analytics?.tasks ?? pending)} icon="time-outline" color={colors.warning} />
+          <Counter label="Done" value={String(completed)} icon="checkmark-circle-outline" color={colors.success} />
         </View>
       </View>
+
       <View style={styles.filterRow}>
         {(['all', 'academic', 'personal', 'urgent'] as const).map((f) => (
           <Pressable key={f} onPress={() => setFilter(f)} style={[styles.filterPill, filter === f && styles.filterActive]}>
@@ -87,79 +92,117 @@ export default function Tasks() {
           </Pressable>
         ))}
       </View>
-      <View style={styles.actionsRow}>
-        <PrimaryButton title="Add Task" icon="add" onPress={() => open()} />
-      </View>
-      {loading ? <ActivityIndicator color="#fff" /> : null}
+
+      {loading ? <ActivityIndicator color="#fff" style={{ marginTop: 20 }} /> : null}
+      
       <FlatList
         contentContainerStyle={styles.list}
         data={items}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#fff" />}
-        ListEmptyComponent={<Text style={styles.empty}>No tasks yet.</Text>}
+        ListEmptyComponent={<Text style={styles.empty}>No tasks found in this category.</Text>}
         renderItem={({ item }) => (
-          <GlassCard style={styles.taskCard}>
-            <View style={styles.taskTop}>
-              <View style={[styles.checkbox, item.status === 'done' && styles.checkboxDone]}>
-                {item.status === 'done' ? <Ionicons name="checkmark" color="#fff" size={16} /> : null}
-              </View>
+          <GlassCard style={[styles.taskCard, item.status === 'done' && styles.taskCardDone]}>
+            <View style={styles.taskMain}>
+              <Pressable 
+                onPress={async () => {
+                  const nextStatus = item.status === 'done' ? 'todo' : 'done';
+                  await updateItem(`/tasks/${item.id}`, { status: nextStatus });
+                  await load(true);
+                }}
+                style={[styles.checkbox, item.status === 'done' && styles.checkboxDone]}
+              >
+                {item.status === 'done' ? <Ionicons name="checkmark" color="#fff" size={14} /> : null}
+              </Pressable>
+              
               <View style={{ flex: 1 }}>
                 <Text style={[styles.taskTitle, item.status === 'done' && styles.done]}>{item.title}</Text>
-                <Text style={styles.taskSub}>{item.description ?? item.subtitle ?? 'No description'}</Text>
+                {item.description ? <Text style={styles.taskSub} numberOfLines={2}>{item.description}</Text> : null}
+                
                 <View style={styles.taskMetaRow}>
-                  <Text style={[styles.tag, item.priority === 'high' ? styles.high : item.priority === 'medium' ? styles.medium : styles.personal]}>{item.priority}</Text>
-                  <Text style={styles.metaText}>{item.category ?? 'academic'}</Text>
-                  <Text style={styles.metaText}>{item.due ?? item.deadline ?? 'No deadline'}</Text>
+                  <View style={[styles.priorityTag, getPriorityStyle(item.priority)]}>
+                    <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>{item.priority}</Text>
+                  </View>
+                  <View style={styles.metaBadge}>
+                    <Ionicons name="calendar-outline" size={12} color={colors.muted} />
+                    <Text style={styles.metaText}>{item.due || 'No date'}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-            <View style={styles.actions}>
-              <Pressable onPress={() => open(item)}><Text style={styles.action}>Edit</Text></Pressable>
-              <Pressable onPress={() => remove(item)}><Text style={[styles.action, styles.danger]}>Delete</Text></Pressable>
+
+              <View style={styles.taskActions}>
+                <Pressable onPress={() => open(item)} style={styles.actionIcon}><Ionicons name="pencil-outline" size={18} color={colors.primary} /></Pressable>
+                <Pressable onPress={() => remove(item)} style={styles.actionIcon}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+              </View>
             </View>
           </GlassCard>
         )}
       />
-      <Pressable onPress={() => open()} style={styles.fab}><Ionicons name="add" size={30} color="#fff" /></Pressable>
+      
       <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Task' : 'New Task'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
     </GradientShell>
   );
 }
 
-function Counter({ label, value }: { label: string; value: string }) {
-  return <GlassCard style={styles.counter}><Text style={styles.counterValue}>{value}</Text><Text style={styles.counterLabel}>{label}</Text></GlassCard>;
+function Counter({ label, value, icon, color }: { label: string; value: string; icon: keyof typeof Ionicons.glyphMap; color: string }) {
+  return (
+    <GlassCard style={styles.counter}>
+      <View style={[styles.counterIcon, { backgroundColor: color + '20' }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <View>
+        <Text style={styles.counterValue}>{value}</Text>
+        <Text style={styles.counterLabel}>{label}</Text>
+      </View>
+    </GlassCard>
+  );
+}
+
+function getPriorityStyle(priority: string) {
+  switch (priority?.toLowerCase()) {
+    case 'high': return { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' };
+    case 'medium': return { backgroundColor: 'rgba(245, 158, 11, 0.1)', borderColor: 'rgba(245, 158, 11, 0.2)' };
+    default: return { backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.2)' };
+  }
+}
+
+function getPriorityColor(priority: string) {
+  switch (priority?.toLowerCase()) {
+    case 'high': return colors.danger;
+    case 'medium': return colors.warning;
+    default: return colors.success;
+  }
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 14, paddingTop: 20, paddingBottom: 0 },
-  title: { color: '#fff', fontSize: 30, fontWeight: '900', marginBottom: 12 },
-  counterRow: { flexDirection: 'row', gap: 12 },
-  counter: { flex: 1, padding: 16, minHeight: 84 },
-  counterValue: { color: '#fff', fontSize: 28, fontWeight: '900' },
-  counterLabel: { color: '#B6C6E6', fontSize: 12, fontWeight: '700' },
-  filterRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14, marginTop: 14 },
-  filterPill: { flex: 1, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: '#18263F' },
-  filterActive: { backgroundColor: '#3D7CFF' },
-  filterText: { color: '#B7C7E7', fontWeight: '700', fontSize: 13 },
+  header: { padding: 16, gap: 16 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  title: { color: '#fff', fontSize: 28, fontWeight: '900', letterSpacing: -0.5 },
+  counterRow: { flexDirection: 'row', gap: 10 },
+  counter: { flex: 1, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  counterIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  counterValue: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  counterLabel: { color: colors.muted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  filterRow: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 8 },
+  filterPill: { flex: 1, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surfaceSoft },
+  filterActive: { backgroundColor: colors.primary },
+  filterText: { color: colors.muted, fontWeight: '800', fontSize: 12, textTransform: 'capitalize' },
   filterTextActive: { color: '#fff' },
-  actionsRow: { paddingHorizontal: 14, marginTop: 14 },
-  list: { padding: 14, gap: 12, paddingBottom: 110 },
-  taskCard: { padding: 14, gap: 10 },
-  taskTop: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  checkbox: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: '#7F93B5', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  checkboxDone: { borderColor: '#20C979', backgroundColor: '#20C979' },
-  taskTitle: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  taskSub: { color: '#9EB2D3', marginTop: 4, fontSize: 12 },
-  taskMetaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 10, alignItems: 'center' },
-  tag: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, overflow: 'hidden', fontSize: 11, fontWeight: '800', textTransform: 'lowercase' },
-  high: { color: '#FF6B6B', borderWidth: 1, borderColor: 'rgba(255,107,107,0.5)' },
-  medium: { color: '#F5B244', borderWidth: 1, borderColor: 'rgba(245,178,68,0.5)' },
-  personal: { color: '#61A5FF', borderWidth: 1, borderColor: 'rgba(97,165,255,0.5)' },
-  metaText: { color: '#8DA3C7', fontSize: 12, fontWeight: '700' },
-  done: { textDecorationLine: 'line-through', color: '#7790B5' },
-  empty: { color: '#A6B7D7', fontSize: 13, paddingHorizontal: 14 },
-  action: { color: '#86A8FF', fontWeight: '800' },
-  danger: { color: '#FF6B6B' },
-  actions: { flexDirection: 'row', gap: 16, marginTop: 4 },
-  fab: { position: 'absolute', right: 16, bottom: 96, width: 54, height: 54, borderRadius: 27, backgroundColor: '#3D7CFF', alignItems: 'center', justifyContent: 'center' },
+  list: { padding: 16, gap: 12, paddingBottom: 40 },
+  taskCard: { padding: 16 },
+  taskCardDone: { opacity: 0.6 },
+  taskMain: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+  checkbox: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, borderColor: colors.muted, alignItems: 'center', justifyContent: 'center', marginTop: 2 },
+  checkboxDone: { borderColor: colors.success, backgroundColor: colors.success },
+  taskTitle: { color: '#fff', fontSize: 17, fontWeight: '800' },
+  taskSub: { color: '#9EB2D3', marginTop: 4, fontSize: 13, lineHeight: 18 },
+  taskMetaRow: { flexDirection: 'row', gap: 10, marginTop: 12, alignItems: 'center' },
+  priorityTag: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, borderWidth: 1 },
+  priorityText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.5 },
+  metaBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
+  metaText: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  done: { textDecorationLine: 'line-through', color: colors.muted },
+  taskActions: { gap: 12 },
+  actionIcon: { padding: 4 },
+  empty: { color: colors.muted, textAlign: 'center', marginTop: 40, fontSize: 15 },
 });

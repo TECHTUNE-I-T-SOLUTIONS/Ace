@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard, PrimaryButton } from '@/components';
+import { colors } from '@/theme';
 import { ScreenShell } from '@/screen-shell';
 import { CrudModal } from '@/crud-modal';
 import { apiGetWithQuery } from '@/api';
@@ -24,14 +25,14 @@ export default function CoursesScreen() {
   const [filters, setFilters] = useState<string[]>([]);
   const [queryError, setQueryError] = useState('');
 
-  const fields = useMemo(() => [
-    { key: 'course_code', label: 'Course Code', placeholder: 'CSC 301' },
-    { key: 'course_title', label: 'Course Title', placeholder: 'Database Systems' },
-    { key: 'lecturer_name', label: 'Lecturer Name', placeholder: 'Dr. Smith' },
-    { key: 'venue', label: 'Venue', placeholder: 'LT 101' },
-    { key: 'day_of_week', label: 'Day of Week', placeholder: 'Monday' },
-    { key: 'start_time', label: 'Start Time', placeholder: '09:00' },
-    { key: 'end_time', label: 'End Time', placeholder: '11:00' },
+  const fields = useMemo<any[]>(() => [
+    { key: 'course_code', label: 'Course Code', placeholder: 'CSC 301', step: 1 },
+    { key: 'course_title', label: 'Course Title', placeholder: 'Database Systems', step: 1 },
+    { key: 'lecturer_name', label: 'Lecturer Name', placeholder: 'Dr. Smith', step: 1 },
+    { key: 'venue', label: 'Venue', placeholder: 'LT 101', step: 2 },
+    { key: 'day_of_week', label: 'Day of Week', options: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], step: 2 },
+    { key: 'start_time', label: 'Start Time', fieldType: 'time', placeholder: '09:00', step: 2 },
+    { key: 'end_time', label: 'End Time', fieldType: 'time', placeholder: '11:00', step: 2 },
   ], []);
 
   const load = async (nextPage = 1, append = false) => {
@@ -47,12 +48,11 @@ export default function CoursesScreen() {
       });
       const rows = res.data ?? res ?? [];
       setItems((current) => append ? [...current, ...rows] : rows);
-      setHasMore(Boolean(res.count ? rows.length >= 20 : rows.length === 20));
+      setHasMore(rows.length === 20);
       setPage(nextPage);
       setQueryError('');
     } catch (error: any) {
       setQueryError(error.message ?? 'Failed to load courses');
-      showError(error.message ?? 'Failed to load courses');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -61,8 +61,24 @@ export default function CoursesScreen() {
 
   useEffect(() => { load(1, false); }, [sort, order, filters]);
 
-  const openCreate = () => { setSelected(null); setDraft({ course_code: '', course_title: '', lecturer_name: '', venue: '', day_of_week: '', start_time: '', end_time: '' }); setMode('create'); };
-  const openEdit = (item: any) => { setSelected(item); setDraft({ course_code: item.course_code ?? item.courseCode ?? '', course_title: item.course_title ?? item.courseTitle ?? '', lecturer_name: item.lecturer_name ?? item.lecturerName ?? '', venue: item.venue ?? '', day_of_week: item.day_of_week ?? item.dayOfWeek ?? '', start_time: item.start_time ?? item.startTime ?? '', end_time: item.end_time ?? item.endTime ?? '' }); setMode('edit'); };
+  const openCreate = () => { 
+    setSelected(null); 
+    setDraft({ course_code: '', course_title: '', lecturer_name: '', venue: '', day_of_week: 'Monday', start_time: '', end_time: '' }); 
+    setMode('create'); 
+  };
+  const openEdit = (item: any) => { 
+    setSelected(item); 
+    setDraft({ 
+      course_code: item.course_code ?? item.courseCode ?? '', 
+      course_title: item.course_title ?? item.courseTitle ?? '', 
+      lecturer_name: item.lecturer_name ?? item.lecturerName ?? '', 
+      venue: item.venue ?? '', 
+      day_of_week: item.day_of_week ?? item.dayOfWeek ?? 'Monday', 
+      start_time: item.start_time ?? item.startTime ?? '', 
+      end_time: item.end_time ?? item.endTime ?? '' 
+    }); 
+    setMode('edit'); 
+  };
   const submit = async () => {
     const payload = { ...draft };
     if (mode === 'create') await createItem('/courses', payload);
@@ -74,39 +90,81 @@ export default function CoursesScreen() {
 
   return (
     <ScreenShell title="Courses">
-    <GradientShell>
       <View style={styles.header}>
-        <PrimaryButton title="Add Course" icon="add" onPress={openCreate} />
+        <PrimaryButton title="Add New Course" icon="add" onPress={openCreate} />
       </View>
       <GlassCard style={styles.searchCard}>
-        <TextInput value={search} onChangeText={setSearch} placeholder="Search courses..." placeholderTextColor="#7E92B9" style={styles.searchInput} onSubmitEditing={() => load(1, false)} />
+        <Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />
+        <TextInput 
+          value={search} 
+          onChangeText={setSearch} 
+          placeholder="Search your courses..." 
+          placeholderTextColor="#7E92B9" 
+          style={styles.searchInput} 
+          onSubmitEditing={() => load(1, false)} 
+        />
       </GlassCard>
       <SortFilterBar sort={sort} setSort={setSort} order={order} setOrder={setOrder} filters={filters} setFilters={setFilters} />
-      {loading ? <ActivityIndicator color="#fff" /> : null}
-      {queryError ? <Text style={styles.error}>{queryError}</Text> : null}
+      
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(1, false)} tintColor="#fff" />}
-        ListEmptyComponent={!loading ? <Text style={styles.empty}>No courses found.</Text> : null}
+        ListEmptyComponent={loading ? <ActivityIndicator color="#fff" style={{ marginTop: 20 }} /> : <Text style={styles.empty}>No courses found.</Text>}
         onEndReached={() => { if (hasMore && !loading && !refreshing) load(page + 1, true); }}
         onEndReachedThreshold={0.6}
         renderItem={({ item }) => (
           <GlassCard style={styles.card}>
-            <View style={styles.row}><Text style={styles.code}>{item.course_code ?? item.courseCode}</Text><Text style={styles.badge}>{item.day_of_week ?? item.dayOfWeek ?? 'TBD'}</Text></View>
-            <Text style={styles.name}>{item.course_title ?? item.courseTitle}</Text>
-            <Text style={styles.sub}>{item.lecturer_name ?? item.lecturerName ?? 'Lecturer not set'}</Text>
-            <Text style={styles.meta}>{item.venue ?? 'Venue not set'}</Text>
+            <View style={styles.cardHeader}>
+              <View style={styles.codeBadge}>
+                <Text style={styles.codeText}>{item.course_code ?? item.courseCode}</Text>
+              </View>
+              <View style={styles.dayBadge}>
+                <Text style={styles.dayText}>{item.day_of_week ?? item.dayOfWeek ?? 'TBD'}</Text>
+              </View>
+            </View>
+            
+            <View style={styles.cardContent}>
+              <Text style={styles.name}>{item.course_title ?? item.courseTitle}</Text>
+              <View style={styles.infoRow}>
+                <Ionicons name="person-outline" size={14} color={colors.muted} />
+                <Text style={styles.sub}>{item.lecturer_name ?? item.lecturerName ?? 'No Lecturer'}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={14} color={colors.muted} />
+                <Text style={styles.meta}>{item.venue ?? 'No Venue'}</Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Ionicons name="time-outline" size={14} color={colors.muted} />
+                <Text style={styles.meta}>
+                  {item.start_time ?? 'TBD'} - {item.end_time ?? 'TBD'}
+                </Text>
+              </View>
+            </View>
+
             <View style={styles.actions}>
-              <Action icon="create-outline" label="Edit" onPress={() => openEdit(item)} />
-              <Action icon="trash-outline" label="Delete" danger onPress={() => remove(item)} />
+              <Pressable onPress={() => openEdit(item)} style={styles.editBtn}>
+                <Ionicons name="pencil" size={16} color={colors.primary} />
+                <Text style={styles.editText}>Edit</Text>
+              </Pressable>
+              <Pressable onPress={() => remove(item)} style={styles.deleteBtn}>
+                <Ionicons name="trash-outline" size={16} color={colors.danger} />
+              </Pressable>
             </View>
           </GlassCard>
         )}
       />
-      <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Course' : 'New Course'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
-    </GradientShell>
+      <CrudModal 
+        visible={!!mode} 
+        title={mode === 'edit' ? 'Edit Course' : 'Add Course'} 
+        fields={fields} 
+        values={draft} 
+        onChange={setDraft} 
+        onClose={() => setMode(null)} 
+        onSubmit={submit}
+        totalSteps={2}
+      />
     </ScreenShell>
   );
 }
@@ -116,21 +174,27 @@ function Action({ icon, label, danger, onPress }: { icon: keyof typeof Ionicons.
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 14, gap: 12 },
-  title: { color: '#fff', fontSize: 30, fontWeight: '900' },
-  searchCard: { marginHorizontal: 14, padding: 12 },
-  searchInput: { color: '#fff', minHeight: 48 },
-  list: { padding: 14, gap: 12, paddingBottom: 20 },
-  card: { padding: 14, gap: 6 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  code: { color: '#7BA2FF', fontWeight: '900' },
-  badge: { color: '#D8E6FF', fontWeight: '700' },
-  name: { color: '#fff', fontSize: 18, fontWeight: '900' },
-  sub: { color: '#B2C3E1', fontSize: 13 },
-  meta: { color: '#8DA3C7', fontSize: 12 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  header: { padding: 14, paddingBottom: 6 },
+  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  searchInput: { color: '#fff', flex: 1, fontSize: 15 },
+  list: { padding: 14, gap: 14, paddingBottom: 40 },
+  card: { padding: 18, gap: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  codeBadge: { backgroundColor: 'rgba(61, 124, 255, 0.15)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  codeText: { color: colors.primary, fontWeight: '900', fontSize: 13 },
+  dayBadge: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  dayText: { color: '#D8E6FF', fontWeight: '800', fontSize: 11 },
+  cardContent: { gap: 6 },
+  name: { color: '#fff', fontSize: 19, fontWeight: '900', letterSpacing: -0.3 },
+  infoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sub: { color: '#B2C3E1', fontSize: 14, fontWeight: '600' },
+  meta: { color: '#8DA3C7', fontSize: 13, fontWeight: '500' },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(61, 124, 255, 0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  editText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
+  deleteBtn: { backgroundColor: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   actionText: { color: '#86A8FF', fontWeight: '800', fontSize: 12 },
-  empty: { color: '#A6B7D7', paddingHorizontal: 14 },
+  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
   error: { color: '#FF8A8A', paddingHorizontal: 14, fontWeight: '700' },
 });

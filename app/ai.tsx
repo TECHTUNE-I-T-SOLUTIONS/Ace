@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard, PrimaryButton } from '@/components';
+import { colors } from '@/theme';
 import { ScreenShell } from '@/screen-shell';
 import { apiGet, apiJson } from '@/api';
 import { showError, showSuccess } from '@/toast';
@@ -93,80 +95,118 @@ export default function AiScreen() {
 
   return (
     <ScreenShell title="ACE Assistant">
-    <GradientShell>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <GlassCard style={styles.card}>
-          <Text style={styles.subtitle}>Ask about deadlines, study plans, progress, exam prep, or generate a revision timetable.</Text>
-          <TextInput value={message} onChangeText={setMessage} placeholder="What should I study today?" placeholderTextColor="#7E92B9" style={styles.input} multiline />
-          <PrimaryButton title="Send" onPress={send} />
-          {loading ? <ActivityIndicator color="#fff" /> : null}
-        </GlassCard>
-
-        <GlassCard style={styles.replyCard}>
-          <Text style={styles.replyTitle}>Conversation</Text>
-          {historyView.length === 0 ? <Text style={styles.replyBody}>Your chat history will appear here.</Text> : historyView.map((entry, index) => (
-            <View key={`${entry.role}-${index}`} style={styles.messageBlock}>
-              <View style={styles.messageTop}>
-                <Text style={styles.messageRole}>{entry.role}</Text>
-                <Text style={styles.messageStamp}>{entry.timestamp ? new Date(entry.timestamp).toLocaleString() : ''}</Text>
-              </View>
-              <Text style={styles.messageBody}>{entry.content}</Text>
+          <View style={styles.inputHeader}>
+            <Ionicons name="sparkles" size={20} color={colors.primary} />
+            <Text style={styles.subtitle}>Smart Academic Assistant</Text>
+          </View>
+          <TextInput 
+            value={message} 
+            onChangeText={setMessage} 
+            placeholder="Ask me anything about your studies..." 
+            placeholderTextColor="#7E92B9" 
+            style={styles.input} 
+            multiline 
+          />
+          <View style={styles.sendRow}>
+            {loading ? <ActivityIndicator color={colors.primary} style={{ marginRight: 12 }} /> : null}
+            <View style={{ flex: 1 }}>
+              <PrimaryButton title="Send Message" onPress={send} />
             </View>
-          ))}
-          <Text style={styles.replyTitle}>Latest Reply</Text>
-          <Text style={styles.replyBody}>{reply || 'Your AI response will appear here.'}</Text>
+          </View>
         </GlassCard>
 
-        <Text style={styles.threadHeader}>Saved Threads</Text>
-        {loadingThreads ? <ActivityIndicator color="#fff" /> : null}
-        <FlatList
-          data={threads}
-          scrollEnabled={false}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <GlassCard style={[styles.threadCard, activeThread?.id === item.id && styles.threadActive]}>
-              <Pressable onPress={() => openThread(item)} style={{ gap: 6 }}>
-                <Text style={styles.threadTitle}>{item.title}</Text>
-                <Text style={styles.threadSub} numberOfLines={2}>{item.summary ?? 'No summary yet'}</Text>
-              </Pressable>
-              <Text style={styles.threadStamp}>
-                {item.last_message_at ? new Date(item.last_message_at).toLocaleString() : ''}
-              </Text>
-              <View style={styles.threadActions}>
-                <Pressable onPress={() => openThread(item)}><Text style={styles.threadAction}>Open</Text></Pressable>
-                <Pressable onPress={() => archiveThread(item.id)}><Text style={styles.threadAction}>Archive</Text></Pressable>
-                <Pressable onPress={() => deleteThread(item.id)}><Text style={[styles.threadAction, styles.threadDanger]}>Delete</Text></Pressable>
-              </View>
+        <View style={styles.chatSection}>
+          <Text style={styles.sectionTitle}>Conversation History</Text>
+          {historyView.length === 0 ? (
+            <GlassCard style={styles.emptyChat}>
+              <Ionicons name="chatbubbles-outline" size={32} color={colors.muted} />
+              <Text style={styles.replyBody}>Your AI study companion is ready. Start a conversation above.</Text>
             </GlassCard>
+          ) : (
+            <View style={styles.historyList}>
+              {historyView.map((entry, index) => (
+                <View key={`${entry.role}-${index}`} style={[styles.msgWrapper, entry.role === 'user' ? styles.userWrapper : styles.aiWrapper]}>
+                  <View style={[styles.bubble, entry.role === 'user' ? styles.userBubble : styles.aiBubble]}>
+                    <Text style={[styles.msgBody, entry.role === 'user' ? styles.userMsg : styles.aiMsg]}>{entry.content}</Text>
+                  </View>
+                  <Text style={styles.msgStamp}>{entry.timestamp ? new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</Text>
+                </View>
+              ))}
+            </View>
           )}
-        />
+        </View>
+
+        <View style={styles.threadsSection}>
+          <View style={styles.threadHeaderRow}>
+            <Text style={styles.sectionTitle}>Saved Threads</Text>
+            {loadingThreads ? <ActivityIndicator size="small" color={colors.primary} /> : null}
+          </View>
+          <FlatList
+            data={threads}
+            scrollEnabled={false}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <GlassCard style={[styles.threadCard, activeThread?.id === item.id && styles.threadActive]}>
+                <Pressable onPress={() => openThread(item)} style={styles.threadPress}>
+                  <View style={styles.threadInfo}>
+                    <Text style={styles.threadTitle}>{item.title}</Text>
+                    <Text style={styles.threadSub} numberOfLines={1}>{item.summary ?? 'New conversation'}</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+                </Pressable>
+                
+                <View style={styles.threadFooter}>
+                  <Text style={styles.threadStamp}>
+                    {item.last_message_at ? new Date(item.last_message_at).toLocaleDateString() : 'Just now'}
+                  </Text>
+                  <View style={styles.threadActions}>
+                    <Pressable onPress={() => archiveThread(item.id)} style={styles.actionBtn}><Ionicons name="archive-outline" size={16} color={colors.primary} /></Pressable>
+                    <Pressable onPress={() => deleteThread(item.id)} style={styles.actionBtn}><Ionicons name="trash-outline" size={16} color={colors.danger} /></Pressable>
+                  </View>
+                </View>
+              </GlassCard>
+            )}
+          />
+        </View>
       </ScrollView>
-    </GradientShell>
     </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { padding: 14, gap: 14, paddingBottom: 20 },
-  title: { color: '#fff', fontSize: 30, fontWeight: '900' },
-  card: { padding: 16, gap: 12 },
-  subtitle: { color: '#B2C3E1', lineHeight: 22 },
-  input: { minHeight: 120, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(148,175,230,0.18)', backgroundColor: '#101F39', padding: 14, color: '#fff', textAlignVertical: 'top' },
-  replyCard: { padding: 16, gap: 10 },
-  replyTitle: { color: '#fff', fontSize: 18, fontWeight: '900' },
-  replyBody: { color: '#B2C3E1', lineHeight: 22 },
-  messageBlock: { gap: 6, paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(148,175,230,0.12)' },
-  messageTop: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  messageRole: { color: '#86A8FF', fontSize: 11, fontWeight: '900', textTransform: 'uppercase' },
-  messageStamp: { color: '#8DA3C7', fontSize: 11, fontWeight: '700' },
-  messageBody: { color: '#fff', lineHeight: 20 },
-  threadHeader: { color: '#fff', fontSize: 18, fontWeight: '900' },
-  threadCard: { padding: 14, gap: 8, marginBottom: 10 },
-  threadActive: { borderColor: '#3D7CFF' },
-  threadTitle: { color: '#fff', fontWeight: '900' },
-  threadSub: { color: '#B2C3E1', fontSize: 12, lineHeight: 18 },
-  threadStamp: { color: '#8DA3C7', fontSize: 11, fontWeight: '700' },
-  threadActions: { flexDirection: 'row', gap: 14 },
-  threadAction: { color: '#86A8FF', fontWeight: '800' },
-  threadDanger: { color: '#FF6B6B' },
+  content: { padding: 14, gap: 20, paddingBottom: 40 },
+  card: { padding: 18, gap: 14 },
+  inputHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  subtitle: { color: '#B2C3E1', fontSize: 14, fontWeight: '700' },
+  input: { minHeight: 100, borderRadius: 16, backgroundColor: '#101F39', padding: 16, color: '#fff', fontSize: 15, textAlignVertical: 'top', borderWidth: 1, borderColor: 'rgba(255,255,255,0.05)' },
+  sendRow: { flexDirection: 'row', alignItems: 'center' },
+  chatSection: { gap: 12 },
+  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
+  emptyChat: { padding: 24, alignItems: 'center', gap: 12, borderStyle: 'dashed', backgroundColor: 'transparent' },
+  historyList: { gap: 16 },
+  msgWrapper: { maxWidth: '85%', gap: 4 },
+  userWrapper: { alignSelf: 'flex-end', alignItems: 'flex-end' },
+  aiWrapper: { alignSelf: 'flex-start', alignItems: 'flex-start' },
+  bubble: { padding: 14, borderRadius: 18 },
+  userBubble: { backgroundColor: colors.primary, borderBottomRightRadius: 4 },
+  aiBubble: { backgroundColor: colors.surfaceSoft, borderBottomLeftRadius: 4 },
+  msgBody: { fontSize: 15, lineHeight: 22 },
+  userMsg: { color: '#fff' },
+  aiMsg: { color: '#E1E9F5' },
+  msgStamp: { color: colors.muted, fontSize: 10, fontWeight: '600' },
+  replyBody: { color: '#B2C3E1', lineHeight: 22, textAlign: 'center' },
+  threadsSection: { gap: 12 },
+  threadHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  threadCard: { padding: 16, gap: 12, marginBottom: 12 },
+  threadActive: { borderColor: colors.primary, borderWidth: 1.5 },
+  threadPress: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  threadInfo: { flex: 1, gap: 4 },
+  threadTitle: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  threadSub: { color: '#B2C3E1', fontSize: 13 },
+  threadFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 10 },
+  threadStamp: { color: colors.muted, fontSize: 11, fontWeight: '700' },
+  threadActions: { flexDirection: 'row', gap: 16 },
+  actionBtn: { padding: 4 },
 });

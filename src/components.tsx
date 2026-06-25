@@ -1,10 +1,18 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, radii } from '@/theme';
 
-export function GradientShell({ children, style }: { children: React.ReactNode; style?: any }) {
-  return <View style={[styles.shell, style]}>{children}</View>;
+export function GradientShell({ children, style, safe = true }: { children: React.ReactNode; style?: any; safe?: boolean }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={[styles.shell, style, safe && { paddingTop: Math.max(insets.top, 16) }]}>
+      <View style={{ flex: 1 }}>
+        {children}
+      </View>
+    </View>
+  );
 }
 
 export function GlassCard({ children, style }: { children: React.ReactNode; style?: any }) {

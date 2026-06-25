@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard, PrimaryButton } from '@/components';
+import { colors } from '@/theme';
 import { ScreenShell } from '@/screen-shell';
 import { CrudModal } from '@/crud-modal';
 import { apiGetWithQuery } from '@/api';
@@ -25,12 +26,12 @@ export default function AssignmentsScreen() {
   const [queryError, setQueryError] = useState('');
 
   const fields = useMemo<any[]>(() => [
-    { key: 'title', label: 'Title', placeholder: 'React Assignment' },
-    { key: 'description', label: 'Description', placeholder: 'Describe the assignment', multiline: true },
-    { key: 'priority', label: 'Priority', options: ['low', 'medium', 'high'] },
-    { key: 'deadline_date', label: 'Deadline Date', fieldType: 'date', placeholder: 'Pick date' },
-    { key: 'deadline_time', label: 'Deadline Time', fieldType: 'time', placeholder: 'Pick time' },
-    { key: 'status', label: 'Status', options: ['pending', 'completed'] },
+    { key: 'title', label: 'Assignment Title', placeholder: 'React Native Project', step: 1 },
+    { key: 'description', label: 'Detailed Description', placeholder: 'Explain the requirements...', multiline: true, step: 1 },
+    { key: 'priority', label: 'Priority Level', options: ['Low', 'Medium', 'High'], step: 2 },
+    { key: 'deadline_date', label: 'Due Date', fieldType: 'date', placeholder: 'Pick date', step: 2 },
+    { key: 'deadline_time', label: 'Due Time', fieldType: 'time', placeholder: 'Pick time', step: 2 },
+    { key: 'status', label: 'Current Status', options: ['Todo', 'In Progress', 'Completed'], step: 2 },
   ], []);
 
   const load = async (nextPage = 1, append = false) => {
@@ -51,7 +52,6 @@ export default function AssignmentsScreen() {
       setQueryError('');
     } catch (error: any) {
       setQueryError(error.message ?? 'Failed to load assignments');
-      showError(error.message ?? 'Failed to load assignments');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -60,66 +60,128 @@ export default function AssignmentsScreen() {
 
   useEffect(() => { load(1, false); }, [sort, order, filters]);
 
-  const openCreate = () => { setSelected(null); setDraft({ title: '', description: '', priority: 'medium', deadline_date: '', deadline_time: '', status: 'pending' }); setMode('create'); };
-  const openEdit = (item: any) => { setSelected(item); setDraft({ title: item.title ?? '', description: item.description ?? '', priority: item.priority ?? 'medium', deadline_date: item.deadline_date ?? item.deadlineDate ?? '', deadline_time: item.deadline_time ?? item.deadlineTime ?? '', status: item.status ?? 'pending' }); setMode('edit'); };
+  const openCreate = () => { 
+    setSelected(null); 
+    setDraft({ title: '', description: '', priority: 'Medium', deadline_date: '', deadline_time: '', status: 'Todo' }); 
+    setMode('create'); 
+  };
+  const openEdit = (item: any) => { 
+    setSelected(item); 
+    setDraft({ 
+      title: item.title ?? '', 
+      description: item.description ?? '', 
+      priority: item.priority ?? 'Medium', 
+      deadline_date: item.deadline_date ?? item.deadlineDate ?? '', 
+      deadline_time: item.deadline_time ?? item.deadlineTime ?? '', 
+      status: item.status ?? 'Todo' 
+    }); 
+    setMode('edit'); 
+  };
   const submit = async () => { const payload = { ...draft }; if (mode === 'create') await createItem('/assignments', payload); if (mode === 'edit' && selected) await updateItem(`/assignments/${selected.id}`, payload); setMode(null); await load(1, false); };
   const remove = async (item: any) => { await deleteItem(`/assignments/${item.id}`); await load(1, false); };
 
+  const getPriorityStyle = (priority: string) => {
+    switch (priority?.toLowerCase()) {
+      case 'high': return { color: colors.danger, bg: 'rgba(239, 68, 68, 0.1)' };
+      case 'medium': return { color: colors.warning, bg: 'rgba(245, 158, 11, 0.1)' };
+      default: return { color: colors.success, bg: 'rgba(34, 197, 94, 0.1)' };
+    }
+  };
+
   return (
     <ScreenShell title="Assignments">
-    <GradientShell>
-      <PrimaryButton title="New Assignment" icon="add" onPress={openCreate} />
+      <View style={styles.header}>
+        <PrimaryButton title="New Assignment" icon="add" onPress={openCreate} />
+      </View>
       <GlassCard style={styles.searchCard}>
-        <TextInput value={search} onChangeText={setSearch} placeholder="Search assignments..." placeholderTextColor="#7E92B9" style={styles.searchInput} onSubmitEditing={() => load(1, false)} />
+        <Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />
+        <TextInput 
+          value={search} 
+          onChangeText={setSearch} 
+          placeholder="Search assignments..." 
+          placeholderTextColor="#7E92B9" 
+          style={styles.searchInput} 
+          onSubmitEditing={() => load(1, false)} 
+        />
       </GlassCard>
       <SortFilterBar sort={sort} setSort={setSort} order={order} setOrder={setOrder} filters={filters} setFilters={setFilters} />
-      {loading ? <ActivityIndicator color="#fff" /> : null}
-      {queryError ? <Text style={styles.error}>{queryError}</Text> : null}
+      
       <FlatList
         data={items}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(1, false)} tintColor="#fff" />}
-        ListEmptyComponent={!loading ? <Text style={styles.empty}>No assignments found.</Text> : null}
+        ListEmptyComponent={loading ? <ActivityIndicator color="#fff" style={{ marginTop: 20 }} /> : <Text style={styles.empty}>No assignments found.</Text>}
         onEndReached={() => { if (hasMore && !loading && !refreshing) load(page + 1, true); }}
         onEndReachedThreshold={0.6}
-        renderItem={({ item }) => (
-          <GlassCard style={styles.card}>
-            <Text style={styles.name}>{item.title}</Text>
-            <Text style={styles.sub}>Due: {item.deadline_date ?? item.deadlineDate ?? 'TBD'}</Text>
-            <Text style={[styles.tag, item.priority === 'high' ? styles.high : item.priority === 'medium' ? styles.medium : styles.low]}>{item.priority ?? 'medium'}</Text>
-            <View style={styles.actions}>
-              <Action icon="create-outline" label="Edit" onPress={() => openEdit(item)} />
-              <Action icon="trash-outline" label="Delete" danger onPress={() => remove(item)} />
-            </View>
-          </GlassCard>
-        )}
+        renderItem={({ item }) => {
+          const pStyle = getPriorityStyle(item.priority);
+          return (
+            <GlassCard style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={[styles.priorityBadge, { backgroundColor: pStyle.bg }]}>
+                  <Text style={[styles.priorityText, { color: pStyle.color }]}>{item.priority?.toUpperCase() ?? 'MEDIUM'}</Text>
+                </View>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>{item.status ?? 'Todo'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.cardContent}>
+                <Text style={styles.name}>{item.title}</Text>
+                {item.description ? <Text style={styles.desc} numberOfLines={2}>{item.description}</Text> : null}
+                <View style={styles.dueDateRow}>
+                  <Ionicons name="calendar-outline" size={14} color={colors.muted} />
+                  <Text style={styles.sub}>Due: {item.deadline_date ?? 'TBD'} at {item.deadline_time ?? '00:00'}</Text>
+                </View>
+              </View>
+
+              <View style={styles.actions}>
+                <Pressable onPress={() => openEdit(item)} style={styles.editBtn}>
+                  <Ionicons name="pencil" size={16} color={colors.primary} />
+                  <Text style={styles.editText}>Edit</Text>
+                </Pressable>
+                <Pressable onPress={() => remove(item)} style={styles.deleteBtn}>
+                  <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                </Pressable>
+              </View>
+            </GlassCard>
+          );
+        }}
       />
-      <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Assignment' : 'New Assignment'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
-    </GradientShell>
+      <CrudModal 
+        visible={!!mode} 
+        title={mode === 'edit' ? 'Edit Assignment' : 'New Assignment'} 
+        fields={fields} 
+        values={draft} 
+        onChange={setDraft} 
+        onClose={() => setMode(null)} 
+        onSubmit={submit}
+        totalSteps={2}
+      />
     </ScreenShell>
   );
 }
 
-function Action({ icon, label, danger, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; danger?: boolean; onPress: () => void }) {
-  return <Pressable onPress={onPress} style={styles.action}><Ionicons name={icon} color={danger ? '#FF6B6B' : '#86A8FF'} size={16} /><Text style={[styles.actionText, danger && { color: '#FF6B6B' }]}>{label}</Text></Pressable>;
-}
-
 const styles = StyleSheet.create({
-  title: { color: '#fff', fontSize: 30, fontWeight: '900', padding: 14, paddingBottom: 10 },
-  searchCard: { marginHorizontal: 14, padding: 12, marginBottom: 10 },
-  searchInput: { color: '#fff', minHeight: 48 },
-  list: { padding: 14, gap: 12, paddingBottom: 20 },
-  card: { padding: 14, gap: 8 },
-  name: { color: '#fff', fontSize: 18, fontWeight: '900' },
-  sub: { color: '#B2C3E1' },
-  tag: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999, fontWeight: '800', overflow: 'hidden' },
-  high: { color: '#FF7070', borderWidth: 1, borderColor: 'rgba(255,112,112,0.4)' },
-  medium: { color: '#F5B244', borderWidth: 1, borderColor: 'rgba(245,178,68,0.4)' },
-  low: { color: '#61A5FF', borderWidth: 1, borderColor: 'rgba(97,165,255,0.4)' },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actionText: { color: '#86A8FF', fontWeight: '800', fontSize: 12 },
-  empty: { color: '#A6B7D7', paddingHorizontal: 14 },
-  error: { color: '#FF8A8A', paddingHorizontal: 14, fontWeight: '700' },
+  header: { padding: 14, paddingBottom: 6 },
+  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  searchInput: { color: '#fff', flex: 1, fontSize: 15 },
+  list: { padding: 14, gap: 14, paddingBottom: 40 },
+  card: { padding: 18, gap: 12 },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  priorityBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  priorityText: { fontWeight: '900', fontSize: 10, letterSpacing: 0.5 },
+  statusBadge: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusText: { color: '#D8E6FF', fontWeight: '800', fontSize: 11 },
+  cardContent: { gap: 6 },
+  name: { color: '#fff', fontSize: 19, fontWeight: '900', letterSpacing: -0.3 },
+  desc: { color: '#9EB2D3', fontSize: 14, lineHeight: 20 },
+  dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  sub: { color: '#8DA3C7', fontSize: 13, fontWeight: '600' },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12 },
+  editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(61, 124, 255, 0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  editText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
+  deleteBtn: { backgroundColor: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
 });

@@ -187,7 +187,7 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { padding: 14, gap: 14, paddingBottom: 24, paddingTop: 16 },
+  wrap: { padding: 14, gap: 14, paddingBottom: 24 },
   hero: { backgroundColor: '#2A61D9', borderRadius: 28, padding: 14, gap: 12 },
   title: { color: '#fff', fontSize: 30, fontWeight: '900' },
   monthBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 18 },

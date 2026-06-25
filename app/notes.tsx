@@ -1,6 +1,8 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard, PrimaryButton } from '@/components';
+import { colors } from '@/theme';
 import { ScreenShell } from '@/screen-shell';
 import { CrudModal } from '@/crud-modal';
 import { apiGet, apiGetWithQuery } from '@/api';
@@ -72,109 +74,124 @@ export default function NotesScreen() {
   const visibleItems = query.trim() ? searchResults : items;
 
   return (
-    <ScreenShell title="Notes">
-    <GradientShell>
+    <ScreenShell title="My Notes">
       <View style={styles.header}>
-        <PrimaryButton title="New Note" icon="add" onPress={openCreate} />
+        <PrimaryButton title="Create New Note" icon="add" onPress={openCreate} />
+        <View style={styles.uploadButtons}>
+          <Pressable 
+            onPress={async () => {
+              setUploading(true);
+              try {
+                const assets = await pickAttachment();
+                const uploaded: string[] = [];
+                for (const asset of assets) {
+                  const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
+                  uploaded.push(url);
+                }
+                setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), ...uploaded].join(', ') }));
+              } catch (error: any) {
+                showError(error.message ?? 'Upload failed');
+              } finally {
+                setUploading(false);
+              }
+            }}
+            style={styles.uploadBtn}
+          >
+            <Ionicons name="document-attach-outline" size={18} color={colors.primary} />
+            <Text style={styles.uploadBtnText}>File</Text>
+          </Pressable>
+          <Pressable 
+            onPress={async () => {
+              setUploading(true);
+              try {
+                const asset = await pickImage();
+                if (!asset) return;
+                const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
+                setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), url].join(', ') }));
+              } catch (error: any) {
+                showError(error.message ?? 'Upload failed');
+              } finally {
+                setUploading(false);
+              }
+            }}
+            style={styles.uploadBtn}
+          >
+            <Ionicons name="image-outline" size={18} color={colors.primary} />
+            <Text style={styles.uploadBtnText}>Image</Text>
+          </Pressable>
+        </View>
       </View>
 
       <GlassCard style={styles.searchCard}>
-        <TextInput value={query} onChangeText={runSearch} placeholder="Search notes..." placeholderTextColor="#7E92B9" style={styles.searchInput} />
+        <Ionicons name="search-outline" size={20} color={colors.muted} style={{ marginRight: 8 }} />
+        <TextInput value={query} onChangeText={runSearch} placeholder="Search your notes..." placeholderTextColor="#7E92B9" style={styles.searchInput} />
       </GlassCard>
       <SortFilterBar sort={sort} setSort={setSort} order={order} setOrder={setOrder} filters={filters} setFilters={setFilters} />
 
-      <View style={styles.uploadRow}>
-        <PrimaryButton
-          title="Upload File"
-          variant="ghost"
-          onPress={async () => {
-            setUploading(true);
-            try {
-              const assets = await pickAttachment();
-              const uploaded: string[] = [];
-              for (const asset of assets) {
-                const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
-                uploaded.push(url);
-              }
-              setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), ...uploaded].join(', ') }));
-            } catch (error: any) {
-              showError(error.message ?? 'Upload failed');
-            } finally {
-              setUploading(false);
-            }
-          }}
-        />
-        <PrimaryButton
-          title="Upload Image"
-          variant="ghost"
-          onPress={async () => {
-            setUploading(true);
-            try {
-              const asset = await pickImage();
-              if (!asset) return;
-              const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
-              setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), url].join(', ') }));
-            } catch (error: any) {
-              showError(error.message ?? 'Upload failed');
-            } finally {
-              setUploading(false);
-            }
-          }}
-        />
-      </View>
-      {uploading || loading || searching ? <ActivityIndicator color="#fff" /> : null}
+      {uploading || loading || searching ? <ActivityIndicator color="#fff" style={{ marginVertical: 10 }} /> : null}
 
       <FlatList
         data={visibleItems}
         keyExtractor={(i) => i.id}
         contentContainerStyle={styles.list}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(1, false)} tintColor="#fff" />}
-        ListEmptyComponent={!loading ? <Text style={styles.empty}>No notes yet.</Text> : null}
+        ListEmptyComponent={!loading ? <Text style={styles.empty}>No notes found yet.</Text> : null}
         onEndReached={() => { if (hasMore && !loading && !refreshing && !query.trim()) load(page + 1, true); }}
         onEndReachedThreshold={0.6}
         renderItem={({ item }) => (
           <GlassCard style={styles.card}>
             <View style={styles.cardTop}>
-              <Text style={styles.name}>{item.title}</Text>
-              <Pressable onPress={() => openEdit(item)}><Text style={styles.editLink}>Edit</Text></Pressable>
+              <Text style={styles.name} numberOfLines={1}>{item.title}</Text>
+              <View style={styles.cardActions}>
+                <Pressable onPress={() => openEdit(item)}><Ionicons name="pencil" size={18} color={colors.primary} /></Pressable>
+                <Pressable onPress={async () => { await remove(item); }}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+              </View>
             </View>
-            <Text style={styles.sub} numberOfLines={3}>{item.content}</Text>
+            
+            <Text style={styles.sub} numberOfLines={2}>{item.summary || item.content}</Text>
+            
             <View style={styles.footerRow}>
-              <Text style={styles.meta}>{new Date(item.created_at ?? item.createdAt ?? Date.now()).toLocaleDateString()}</Text>
-              <Pressable onPress={async () => { await remove(item); }}><Text style={styles.deleteLink}>Delete</Text></Pressable>
-            </View>
-            <View style={styles.attachRow}>
-              {(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).slice(0, 3).map((attachment: string) => (
-                <View key={attachment} style={styles.attachPill}><Text style={styles.attachText} numberOfLines={1}>{attachment}</Text></View>
-              ))}
+              <View style={styles.dateBadge}>
+                <Ionicons name="calendar-outline" size={12} color={colors.muted} />
+                <Text style={styles.meta}>{new Date(item.created_at ?? item.createdAt ?? Date.now()).toLocaleDateString()}</Text>
+              </View>
+              
+              <View style={styles.attachRow}>
+                {(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length > 0 && (
+                  <View style={styles.attachCount}>
+                    <Ionicons name="attach-outline" size={14} color={colors.success} />
+                    <Text style={styles.attachCountText}>{(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length}</Text>
+                  </View>
+                )}
+              </View>
             </View>
           </GlassCard>
         )}
       />
 
       <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Note' : 'New Note'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
-    </GradientShell>
     </ScreenShell>
   );
 }
 
 const styles = StyleSheet.create({
   header: { padding: 14, gap: 12 },
-  title: { color: '#fff', fontSize: 30, fontWeight: '900' },
-  searchCard: { marginHorizontal: 14, padding: 12 },
-  searchInput: { color: '#fff', minHeight: 48 },
-  uploadRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 14 },
-  list: { padding: 14, gap: 12, paddingBottom: 20 },
-  card: { padding: 14, gap: 10 },
+  uploadButtons: { flexDirection: 'row', gap: 10 },
+  uploadBtn: { flex: 1, height: 48, borderRadius: 12, backgroundColor: 'rgba(61, 124, 255, 0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(61, 124, 255, 0.2)' },
+  uploadBtnText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
+  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  searchInput: { color: '#fff', flex: 1, fontSize: 15 },
+  list: { padding: 14, gap: 14, paddingBottom: 40 },
+  card: { padding: 18, gap: 12 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { color: '#fff', fontSize: 18, fontWeight: '900', flex: 1, paddingRight: 12 },
-  sub: { color: '#B2C3E1', lineHeight: 22 },
-  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  name: { color: '#fff', fontSize: 19, fontWeight: '900', flex: 1, paddingRight: 12 },
+  cardActions: { flexDirection: 'row', gap: 16 },
+  sub: { color: '#B2C3E1', lineHeight: 22, fontSize: 14 },
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  dateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   meta: { color: '#8DA3C7', fontSize: 12, fontWeight: '700' },
-  editLink: { color: '#86A8FF', fontWeight: '800' },
-  deleteLink: { color: '#FF6B6B', fontWeight: '800' },
-  attachRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  attachPill: { backgroundColor: '#132545', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, maxWidth: '100%' },
-  attachText: { color: '#D8E6FF', fontSize: 11, fontWeight: '700' },
-  empty: { color: '#A6B7D7', paddingHorizontal: 14 },
+  attachRow: { flexDirection: 'row', gap: 8 },
+  attachCount: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  attachCountText: { color: colors.success, fontSize: 12, fontWeight: '800' },
+  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
 });

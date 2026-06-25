@@ -65,13 +65,14 @@ export default function Dashboard() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.hero}>
           <View style={styles.heroTopRow}>
-            <View>
+            <View style={{ flex: 1, paddingRight: 8 }}>
               <Text style={styles.hello}>Welcome back,</Text>
-              <Text style={styles.name}>{displayName}</Text>
-              <Text style={styles.meta}>{displayFaculty} • {displayDepartment} • {displayLevel}</Text>
+              <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{displayName}</Text>
+              <Text style={styles.meta} numberOfLines={1}>{displayFaculty} • {displayDepartment}</Text>
+              <Text style={styles.meta}>{displayLevel}</Text>
             </View>
             <Pressable onPress={handleSignOut} style={styles.iconButton}>
-              <Ionicons name="log-out-outline" size={20} color="#fff" />
+              <Ionicons name="log-out-outline" size={22} color="#fff" />
             </Pressable>
           </View>
           {completionMissing.length > 0 ? (
@@ -167,7 +168,7 @@ function NavChip({ label, icon, onPress }: { label: string; icon: keyof typeof I
 
 const styles = StyleSheet.create({
   content: { padding: 14, paddingBottom: 24, gap: 14 },
-  hero: { backgroundColor: '#2458D5', borderRadius: 30, padding: 18, paddingTop: 22, paddingBottom: 18, gap: 14 },
+  hero: { backgroundColor: '#2458D5', borderRadius: 30, padding: 18, paddingBottom: 18, gap: 14 },
   heroTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
   hello: { color: '#DCE8FF', fontSize: 15, fontWeight: '600' },
   name: { color: '#fff', fontSize: 30, fontWeight: '900', marginTop: 2 },
@@ -180,10 +181,10 @@ const styles = StyleSheet.create({
   navChip: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, height: 38, borderRadius: 19, backgroundColor: '#16253F' },
   navText: { color: '#fff', fontWeight: '800', fontSize: 12 },
   statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '48.5%', padding: 14, gap: 8, minHeight: 108 },
-  statIcon: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  statValue: { color: '#fff', fontSize: 26, fontWeight: '900' },
-  statLabel: { color: '#B7C7E7', fontSize: 12, fontWeight: '700' },
+  statCard: { width: '48.5%', padding: 16, gap: 6, minHeight: 110, justifyContent: 'center' },
+  statIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  statValue: { color: '#fff', fontSize: 28, fontWeight: '900', lineHeight: 32 },
+  statLabel: { color: '#B7C7E7', fontSize: 13, fontWeight: '700' },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '900' },
   sectionAction: { color: colors.muted, fontSize: 12, fontWeight: '700' },
