@@ -23,7 +23,9 @@
         {
           "icon": "./assets/logo.png",
           "color": "#214FCE",
-          "sounds": ["./assets/notification.wav"]
+          "sounds": [
+            "./assets/notification.wav"
+          ]
         }
       ]
     ],
@@ -32,7 +34,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "ace-mobile"
+        "projectId": "82fc60f5-f42e-4407-9e3b-4f2f67a45c96"
       }
     },
     "android": {
@@ -54,8 +56,11 @@
       "bundleIdentifier": "com.ace.mobile",
       "supportsTablet": true,
       "infoPlist": {
-        "UIBackgroundModes": ["remote-notification"]
+        "UIBackgroundModes": [
+          "remote-notification"
+        ]
       }
-    }
+    },
+    "owner": "princetechtune"
   }
 }
