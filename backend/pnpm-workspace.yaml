@@ -1,7 +1,7 @@
-allowBuilds:
-  '@firebase/util': false
-  '@nestjs/core': false
-  '@prisma/client': false
-  '@prisma/engines': false
-  prisma: false
-  protobufjs: false
+onlyBuiltDependencies:
+  - '@firebase/util'
+  - '@nestjs/core'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - prisma
+  - protobufjs
