@@ -1,26 +1,10 @@
-FROM node:22-alpine AS base
+FROM node:22-alpine
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10 --activate
-
-FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .npmrc* ./
 RUN pnpm install --frozen-lockfile
-
-FROM base AS build
 COPY . .
-COPY --from=deps /app/node_modules ./node_modules
-WORKDIR /app/backend
-RUN pnpm install --frozen-lockfile
 RUN pnpm run build
-
-FROM node:22-alpine AS runner
-WORKDIR /app/backend
-ENV NODE_ENV=production
-RUN corepack enable && corepack prepare pnpm@10 --activate
-COPY --from=build /app/backend/package.json ./package.json
-COPY --from=build /app/backend/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=build /app/backend/dist ./dist
-COPY --from=build /app/backend/node_modules ./node_modules
 EXPOSE 3000
 CMD ["pnpm", "run", "start"]
