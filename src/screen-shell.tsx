@@ -4,7 +4,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 
-export function ScreenShell({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
+export function ScreenShell({ 
+  title, 
+  subtitle, 
+  children, 
+  rightAction 
+}: { 
+  title: string; 
+  subtitle?: string; 
+  children: React.ReactNode;
+  rightAction?: React.ReactNode;
+}) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.shell, { paddingTop: Math.max(insets.top, 16) }]}>
@@ -16,6 +26,7 @@ export function ScreenShell({ title, subtitle, children }: { title: string; subt
           <Text style={styles.title} numberOfLines={1}>{title}</Text>
           {subtitle ? <Text style={styles.subtitle} numberOfLines={1}>{subtitle}</Text> : null}
         </View>
+        {rightAction ? <View style={styles.rightAction}>{rightAction}</View> : null}
       </View>
       <View style={styles.body}>{children}</View>
     </View>
@@ -29,4 +40,5 @@ const styles = StyleSheet.create({
   title: { color: '#fff', fontSize: 26, fontWeight: '900', letterSpacing: -0.5 },
   subtitle: { color: '#AFC0DF', marginTop: 2, fontSize: 13, fontWeight: '600' },
   body: { flex: 1 },
+  rightAction: { marginLeft: 'auto' },
 });

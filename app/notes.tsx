@@ -1,15 +1,15 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GradientShell, GlassCard, PrimaryButton } from '@/components';
-import { colors } from '@/theme';
-import { ScreenShell } from '@/screen-shell';
-import { CrudModal } from '@/crud-modal';
-import { apiGet, apiGetWithQuery } from '@/api';
-import { createItem, deleteItem, updateItem } from '@/api-hooks';
-import { showError } from '@/toast';
-import { pickAttachment, pickImage, uploadToSupabase } from '@/storage';
-import { SortFilterBar } from '@/filters';
+import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
+import { colors } from '../src/theme';
+import { ScreenShell } from '../src/screen-shell';
+import { CrudModal } from '../src/crud-modal';
+import { apiGet, apiGetWithQuery } from '../src/api';
+import { createItem, deleteItem, updateItem } from '../src/api-hooks';
+import { showError } from '../src/toast';
+import { pickAttachment, pickImage, uploadToSupabase } from '../src/storage';
+import { SortFilterBar } from '../src/filters';
 
 export default function NotesScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -175,23 +175,23 @@ export default function NotesScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 14, gap: 12 },
+  header: { padding: 16, gap: 14, marginBottom: 10 },
   uploadButtons: { flexDirection: 'row', gap: 10 },
   uploadBtn: { flex: 1, height: 48, borderRadius: 12, backgroundColor: 'rgba(61, 124, 255, 0.1)', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: 'rgba(61, 124, 255, 0.2)' },
   uploadBtnText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
-  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  searchCard: { marginHorizontal: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52, marginBottom: 20 },
   searchInput: { color: '#fff', flex: 1, fontSize: 15 },
-  list: { padding: 14, gap: 14, paddingBottom: 40 },
-  card: { padding: 18, gap: 12 },
+  list: { padding: 16, gap: 14, paddingBottom: 40 },
+  card: { padding: 20, gap: 12, borderRadius: 24 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  name: { color: '#fff', fontSize: 19, fontWeight: '900', flex: 1, paddingRight: 12 },
+  name: { color: '#fff', fontSize: 20, fontWeight: '900', flex: 1, paddingRight: 12 },
   cardActions: { flexDirection: 'row', gap: 16 },
   sub: { color: '#B2C3E1', lineHeight: 22, fontSize: 14 },
-  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 },
   dateBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   meta: { color: '#8DA3C7', fontSize: 12, fontWeight: '700' },
   attachRow: { flexDirection: 'row', gap: 8 },
   attachCount: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   attachCountText: { color: colors.success, fontSize: 12, fontWeight: '800' },
-  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
+  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 60, fontSize: 15 },
 });

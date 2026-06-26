@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GlassCard, GradientShell, PrimaryButton } from '@/components';
-import { colors } from '@/theme';
-import { CrudModal } from '@/crud-modal';
-import { apiGet, apiGetWithQuery } from '@/api';
-import { createItem, deleteItem, updateItem } from '@/api-hooks';
-import { showError } from '@/toast';
+import { GlassCard, GradientShell, PrimaryButton } from '../../src/components';
+import { colors } from '../../src/theme';
+import { CrudModal } from '../../src/crud-modal';
+import { apiGet, apiGetWithQuery } from '../../src/api';
+import { createItem, deleteItem, updateItem } from '../../src/api-hooks';
+import { showError } from '../../src/toast';
 
 export default function Tasks() {
   const [items, setItems] = useState<any[]>([]);

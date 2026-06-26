@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { GradientShell, GlassCard } from '@/components';
-import { ScreenShell } from '@/screen-shell';
-import { apiGet } from '@/api';
-import { showError } from '@/toast';
+import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { GradientShell, GlassCard } from '../src/components';
+import { colors } from '../src/theme';
+import { ScreenShell } from '../src/screen-shell';
+import { apiGet } from '../src/api';
+import { showError } from '../src/toast';
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+
+  const sectionRoutes: Record<string, string> = {
+    courses: '/courses',
+    notes: '/notes',
+    assignments: '/assignments',
+    exams: '/exams',
+    tests: '/tests',
+    tasks: '/(tabs)/tasks',
+    diary: '/(tabs)/diary',
+  };
+
+  const navigateToResult = (section: string, item: any) => {
+    const route = sectionRoutes[section];
+    if (route) {
+      router.push(route);
+    }
+  };
 
   const run = async (value: string) => {
     setQuery(value);
@@ -38,10 +58,13 @@ export default function SearchScreen() {
               <GlassCard key={section} style={styles.section}>
                 <Text style={styles.sectionTitle}>{section}</Text>
                 {(items as any[]).slice(0, 5).map((item) => (
-                  <View key={item.id} style={styles.item}>
-                    <Text style={styles.itemTitle}>{item.title ?? item.course_title ?? item.courseCode ?? 'Result'}</Text>
+                  <Pressable key={item.id} onPress={() => navigateToResult(section, item)} style={styles.item}>
+                    <View style={styles.itemRow}>
+                      <Text style={styles.itemTitle}>{item.title ?? item.course_title ?? item.courseCode ?? 'Result'}</Text>
+                      <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+                    </View>
                     <Text style={styles.itemSub}>{item.content ?? item.description ?? item.course_code ?? ''}</Text>
-                  </View>
+                  </Pressable>
                 ))}
               </GlassCard>
             ))}
@@ -68,7 +91,8 @@ const styles = StyleSheet.create({
   emptyBody: { color: '#B2C3E1', lineHeight: 22 },
   section: { padding: 14, gap: 10 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '900', textTransform: 'capitalize' },
-  item: { paddingVertical: 8, borderTopWidth: 1, borderTopColor: 'rgba(148,175,230,0.12)' },
-  itemTitle: { color: '#fff', fontWeight: '800' },
+  item: { paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(148,175,230,0.12)' },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  itemTitle: { color: '#fff', fontWeight: '800', flex: 1 },
   itemSub: { color: '#9EB2D3', fontSize: 12, marginTop: 2 },
 });

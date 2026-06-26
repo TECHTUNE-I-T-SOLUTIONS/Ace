@@ -43,3 +43,4 @@ supabase/.cache/
 # Misc
 coverage/
 .idea/
+keys/

@@ -6,5 +6,9 @@ import { AnalyticsService } from './analytics.service';
 @UseGuards(JwtAuthGuard)
 export class AnalyticsController {
   constructor(private readonly service: AnalyticsService) {}
-  @Get('overview') overview(@Req() req: any) { return this.service.overview(req.user.sub); }
+
+  @Get('overview')
+  async overview(@Req() req: any) {
+    return this.service.getOverview(req.user.sub);
+  }
 }

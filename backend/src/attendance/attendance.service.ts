@@ -1,10 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 
 @Injectable()
 export class AttendanceService {
+  private readonly logger = new Logger(AttendanceService.name);
+
   constructor(private readonly supabase: SupabaseService) {}
-  list(userId: string) { return this.supabase.admin.from('attendance_records').select('*').eq('user_id', userId); }
-  create(userId: string, body: any) { return this.supabase.admin.from('attendance_records').insert({ ...body, user_id: userId }).select().single(); }
-  update(id: string, userId: string, body: any) { return this.supabase.admin.from('attendance_records').update(body).eq('id', id).eq('user_id', userId).select().single(); }
+
+  async list(userId: string) {
+    const { data, error } = await this.supabase.admin.from('attendance_records').select('*').eq('user_id', userId);
+    if (error) throw error;
+    return { data: data ?? [] };
+  }
+
+  async create(userId: string, body: any) {
+    const { data, error } = await this.supabase.admin.from('attendance_records').insert({ ...body, user_id: userId }).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async update(id: string, userId: string, body: any) {
+    const { data, error } = await this.supabase.admin.from('attendance_records').update(body).eq('id', id).eq('user_id', userId).select().single();
+    if (error) throw error;
+    return data;
+  }
+
+  async remove(id: string, userId: string) {
+    const { error } = await this.supabase.admin.from('attendance_records').delete().eq('id', id).eq('user_id', userId);
+    if (error) throw error;
+    return { success: true };
+  }
 }

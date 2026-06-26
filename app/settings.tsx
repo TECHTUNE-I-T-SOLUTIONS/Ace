@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { GradientShell, GlassCard } from '@/components';
-import { ScreenShell } from '@/screen-shell';
-import { apiGet, apiJson } from '@/api';
-import { showError, showSuccess } from '@/toast';
+import { GradientShell, GlassCard } from '../src/components';
+import { ScreenShell } from '../src/screen-shell';
+import { apiGet, apiJson } from '../src/api';
+import { showError, showSuccess } from '../src/toast';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<any>(null);

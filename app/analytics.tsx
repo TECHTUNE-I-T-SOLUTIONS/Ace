@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GradientShell, GlassCard } from '@/components';
-import { colors } from '@/theme';
-import { ScreenShell } from '@/screen-shell';
-import { apiGet } from '@/api';
-import { showError } from '@/toast';
+import { GradientShell, GlassCard } from '../src/components';
+import { colors } from '../src/theme';
+import { ScreenShell } from '../src/screen-shell';
+import { apiGet } from '../src/api';
+import { showError } from '../src/toast';
 
 export default function AnalyticsScreen() {
   const [metrics, setMetrics] = useState<[string, number][]>([]);

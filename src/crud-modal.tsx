@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii } from '@/theme';
-import { PrimaryButton } from '@/components';
+import { colors, radii } from './theme';
+import { PrimaryButton } from './components';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
 
 export interface ModalField {
   key: string;
@@ -40,11 +39,18 @@ export function CrudModal({
   const [draft, setDraft] = useState(values);
   const [currentStep, setCurrentStep] = useState(1);
   const [pickerField, setPickerField] = useState<string | null>(null);
+  const colorScheme = useColorScheme();
+  const isDark = true; // Forcing dark mode as per app design, but keeping logic for future
 
+  const visibleRef = useRef(visible);
   useEffect(() => {
+    const justOpened = visible && !visibleRef.current;
+    visibleRef.current = visible;
     if (visible) {
       setDraft(values);
-      setCurrentStep(1);
+      if (justOpened) {
+        setCurrentStep(1);
+      }
     }
   }, [values, visible]);
 
@@ -71,19 +77,27 @@ export function CrudModal({
     }
   };
 
+  const themeStyles = {
+    modalBg: isDark ? colors.background : '#fff',
+    text: isDark ? '#fff' : '#111',
+    mutedText: isDark ? colors.muted : '#666',
+    inputBg: isDark ? 'rgba(16, 31, 57, 0.8)' : '#f5f7fa',
+    border: isDark ? 'rgba(148, 175, 230, 0.12)' : '#e1e8ed',
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.backdrop}>
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: themeStyles.modalBg }]}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.title}>{title}</Text>
+              <Text style={[styles.title, { color: themeStyles.text }]}>{title}</Text>
               {totalSteps > 1 && (
                 <Text style={styles.stepIndicator}>Step {currentStep} of {totalSteps}</Text>
               )}
             </View>
             <Pressable onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={24} color="#fff" />
+              <Ionicons name="close" size={24} color={themeStyles.text} />
             </Pressable>
           </View>
 
@@ -91,35 +105,24 @@ export function CrudModal({
             <View style={styles.form}>
               {stepFields.map((field) => (
                 <View key={field.key} style={styles.fieldGroup}>
-                  <Text style={styles.label}>{field.label}</Text>
-                  {field.options?.length ? (
-                    <View style={styles.pickerWrap}>
-                      <Picker
-                        selectedValue={draft[field.key] ?? ''}
-                        onValueChange={(value) => {
-                          const next = { ...draft, [field.key]: String(value) };
-                          setDraft(next);
-                          onChange(next);
-                        }}
-                        style={styles.picker}
-                        dropdownIconColor={colors.muted}
-                      >
-                        <Picker.Item label={field.placeholder ?? 'Select option'} value="" color={colors.muted} />
-                        {field.options.map((option) => (
-                          <Picker.Item key={option} label={option} value={option} color="#fff" />
-                        ))}
-                      </Picker>
-                    </View>
+                  <Text style={[styles.label, { color: themeStyles.mutedText }]}>{field.label}</Text>
+                  {field.options?.length || field.fieldType === 'select' ? (
+                    <Pressable onPress={() => setPickerField(field.key)} style={[styles.selectInput, { backgroundColor: themeStyles.inputBg, borderColor: themeStyles.border }]}>
+                      <Text style={[styles.selectText, { color: draft[field.key] ? themeStyles.text : themeStyles.mutedText }]}>
+                        {draft[field.key] || field.placeholder || 'Select option'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={20} color={colors.primary} />
+                    </Pressable>
                   ) : field.fieldType === 'date' ? (
-                    <Pressable onPress={() => setPickerField(field.key)} style={styles.selectInput}>
-                      <Text style={[styles.selectText, !draft[field.key] && { color: colors.muted }]}>
+                    <Pressable onPress={() => setPickerField(field.key)} style={[styles.selectInput, { backgroundColor: themeStyles.inputBg, borderColor: themeStyles.border }]}>
+                      <Text style={[styles.selectText, { color: draft[field.key] ? themeStyles.text : themeStyles.mutedText }]}>
                         {draft[field.key] || field.placeholder || 'Pick a date'}
                       </Text>
                       <Ionicons name="calendar-outline" size={20} color={colors.primary} />
                     </Pressable>
                   ) : field.fieldType === 'time' ? (
-                    <Pressable onPress={() => setPickerField(field.key)} style={styles.selectInput}>
-                      <Text style={[styles.selectText, !draft[field.key] && { color: colors.muted }]}>
+                    <Pressable onPress={() => setPickerField(field.key)} style={[styles.selectInput, { backgroundColor: themeStyles.inputBg, borderColor: themeStyles.border }]}>
+                      <Text style={[styles.selectText, { color: draft[field.key] ? themeStyles.text : themeStyles.mutedText }]}>
                         {draft[field.key] || field.placeholder || 'Pick a time'}
                       </Text>
                       <Ionicons name="time-outline" size={20} color={colors.primary} />
@@ -133,51 +136,17 @@ export function CrudModal({
                         onChange(next);
                       }}
                       placeholder={field.placeholder}
-                      placeholderTextColor={colors.muted}
+                      placeholderTextColor={themeStyles.mutedText}
                       secureTextEntry={field.secure}
                       multiline={field.multiline}
                       keyboardType={field.keyboardType}
-                      style={[styles.input, field.multiline && styles.multiline]}
+                      style={[styles.input, { backgroundColor: themeStyles.inputBg, borderColor: themeStyles.border, color: themeStyles.text }, field.multiline && styles.multiline]}
                     />
                   )}
                 </View>
               ))}
             </View>
           </ScrollView>
-
-          {pickerField && currentPicker?.fieldType === 'date' ? (
-            <DateTimePicker
-              value={draft[pickerField] ? new Date(draft[pickerField]) : new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(_event, date) => {
-                setPickerField(null);
-                if (date) {
-                  const iso = date.toISOString().split('T')[0];
-                  const next = { ...draft, [pickerField]: iso };
-                  setDraft(next);
-                  onChange(next);
-                }
-              }}
-            />
-          ) : null}
-
-          {pickerField && currentPicker?.fieldType === 'time' ? (
-            <DateTimePicker
-              value={new Date()}
-              mode="time"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={(_event, date) => {
-                setPickerField(null);
-                if (date) {
-                  const formatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-                  const next = { ...draft, [pickerField]: formatted };
-                  setDraft(next);
-                  onChange(next);
-                }
-              }}
-            />
-          ) : null}
 
           <View style={styles.actions}>
             {currentStep > 1 ? (
@@ -193,6 +162,67 @@ export function CrudModal({
             </View>
           </View>
         </View>
+
+        {pickerField && currentPicker?.options?.length && (
+          <Modal visible transparent animationType="fade" onRequestClose={() => setPickerField(null)}>
+            <Pressable style={styles.pickerBackdrop} onPress={() => setPickerField(null)}>
+              <View style={[styles.pickerModal, { backgroundColor: isDark ? colors.surface : '#fff', borderColor: themeStyles.border }]}>
+                <Text style={[styles.pickerTitle, { color: themeStyles.text }]}>Select {currentPicker.label}</Text>
+                <ScrollView showsVerticalScrollIndicator={false}>
+                  {currentPicker.options?.map((opt) => (
+                    <Pressable 
+                      key={opt} 
+                      onPress={() => {
+                        const next = { ...draft, [pickerField]: opt };
+                        setDraft(next);
+                        onChange(next);
+                        setPickerField(null);
+                      }}
+                      style={[styles.pickerItem, draft[pickerField] === opt && styles.pickerItemActive]}
+                    >
+                      <Text style={[styles.pickerItemText, { color: isDark ? '#B2C3E1' : '#444' }, draft[pickerField] === opt && styles.pickerItemTextActive]}>{opt}</Text>
+                      {draft[pickerField] === opt && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            </Pressable>
+          </Modal>
+        )}
+
+        {pickerField && currentPicker?.fieldType === 'date' ? (
+          <DateTimePicker
+            value={draft[pickerField] ? new Date(draft[pickerField]) : new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_event, date) => {
+              setPickerField(null);
+              if (date) {
+                const iso = date.toISOString().split('T')[0];
+                const next = { ...draft, [pickerField]: iso };
+                setDraft(next);
+                onChange(next);
+              }
+            }}
+          />
+        ) : null}
+
+        {pickerField && currentPicker?.fieldType === 'time' ? (
+          <DateTimePicker
+            value={new Date()}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_event, date) => {
+              setPickerField(null);
+              if (date) {
+                const formatted = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                const next = { ...draft, [pickerField]: formatted };
+                setDraft(next);
+                onChange(next);
+              }
+            }}
+          />
+        ) : null}
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -201,31 +231,26 @@ export function CrudModal({
 const styles = StyleSheet.create({
   backdrop: { flex: 1, backgroundColor: 'rgba(5, 15, 29, 0.85)', justifyContent: 'flex-end' },
   card: { 
-    backgroundColor: colors.background, 
     borderTopLeftRadius: radii.xl, 
     borderTopRightRadius: radii.xl, 
     padding: 24, 
     borderWidth: 1, 
-    borderColor: 'rgba(255,255,255,0.08)', 
     gap: 20,
     maxHeight: '90%',
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  title: { color: '#fff', fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
+  title: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
   stepIndicator: { color: colors.primary, fontSize: 13, fontWeight: '700', marginTop: 2 },
   closeBtn: { padding: 4 },
   formScroll: { maxHeight: 450 },
   form: { gap: 18, paddingBottom: 10 },
   fieldGroup: { gap: 8 },
-  label: { color: '#DCE6FA', fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
   input: { 
-    backgroundColor: 'rgba(16, 31, 57, 0.8)', 
     borderRadius: 16, 
     borderWidth: 1, 
-    borderColor: 'rgba(148, 175, 230, 0.12)', 
     minHeight: 54, 
     paddingHorizontal: 16, 
-    color: '#fff',
     fontSize: 16,
   },
   multiline: { minHeight: 120, paddingTop: 16, textAlignVertical: 'top' },
@@ -234,20 +259,17 @@ const styles = StyleSheet.create({
     minHeight: 54, 
     borderRadius: 16, 
     borderWidth: 1, 
-    borderColor: 'rgba(148, 175, 230, 0.12)', 
-    backgroundColor: 'rgba(16, 31, 57, 0.8)', 
     paddingHorizontal: 16, 
     flexDirection: 'row', 
     alignItems: 'center', 
     justifyContent: 'space-between' 
   },
-  selectText: { color: '#fff', fontSize: 16 },
-  pickerWrap: { 
-    backgroundColor: 'rgba(16, 31, 57, 0.8)', 
-    borderRadius: 16, 
-    borderWidth: 1, 
-    borderColor: 'rgba(148, 175, 230, 0.12)', 
-    overflow: 'hidden' 
-  },
-  picker: { color: '#fff', height: 54 },
+  selectText: { fontSize: 16 },
+  pickerBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 24 },
+  pickerModal: { borderRadius: 24, padding: 20, maxHeight: '70%', borderWidth: 1 },
+  pickerTitle: { fontSize: 18, fontWeight: '900', marginBottom: 16, textAlign: 'center' },
+  pickerItem: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
+  pickerItemActive: { backgroundColor: 'rgba(61, 124, 255, 0.1)' },
+  pickerItemText: { fontSize: 16, fontWeight: '600' },
+  pickerItemTextActive: { color: colors.primary, fontWeight: '800' },
 });

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text } from 'react-native';
-import { GradientShell, GlassCard } from '@/components';
-import { ScreenShell } from '@/screen-shell';
-import { apiGet } from '@/api';
-import { showError } from '@/toast';
+import { GradientShell, GlassCard } from '../src/components';
+import { ScreenShell } from '../src/screen-shell';
+import { apiGet } from '../src/api';
+import { showError } from '../src/toast';
 
 export default function AuditLogsScreen() {
   const [items, setItems] = useState<any[]>([]);

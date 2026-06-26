@@ -20,9 +20,8 @@ enum TaskPriority {
 }
 
 enum TaskStatus {
-  todo
-  doing
-  done
+  pending
+  completed
 }
 
 model User {
@@ -81,7 +80,7 @@ model Assignment {
   priority     TaskPriority
   deadlineDate String
   deadlineTime String?
-  status       TaskStatus @default(todo)
+  status       TaskStatus @default(pending)
   attachments  Json?
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -136,4 +135,17 @@ model Task {
   priority    TaskPriority
   status      TaskStatus
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Grade {
+  id           String    @id @default(cuid())
+  userId       String
+  courseId     String
+  semester     String
+  creditUnits  Int       @default(0)
+  gradePoint   Decimal   @default(0) @db.Decimal(4, 2)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
 }

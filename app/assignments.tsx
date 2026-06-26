@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GradientShell, GlassCard, PrimaryButton } from '@/components';
-import { colors } from '@/theme';
-import { ScreenShell } from '@/screen-shell';
-import { CrudModal } from '@/crud-modal';
-import { apiGetWithQuery } from '@/api';
-import { createItem, deleteItem, updateItem } from '@/api-hooks';
-import { showError } from '@/toast';
-import { SortFilterBar } from '@/filters';
+import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
+import { colors } from '../src/theme';
+import { ScreenShell } from '../src/screen-shell';
+import { CrudModal } from '../src/crud-modal';
+import { apiGetWithQuery } from '../src/api';
+import { createItem, deleteItem, updateItem } from '../src/api-hooks';
+import { showError } from '../src/toast';
+import { SortFilterBar } from '../src/filters';
 
 export default function AssignmentsScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -23,7 +23,6 @@ export default function AssignmentsScreen() {
   const [sort, setSort] = useState('deadline_date');
   const [order, setOrder] = useState<'asc' | 'desc'>('asc');
   const [filters, setFilters] = useState<string[]>([]);
-  const [queryError, setQueryError] = useState('');
 
   const fields = useMemo<any[]>(() => [
     { key: 'title', label: 'Assignment Title', placeholder: 'React Native Project', step: 1 },
@@ -31,7 +30,7 @@ export default function AssignmentsScreen() {
     { key: 'priority', label: 'Priority Level', options: ['Low', 'Medium', 'High'], step: 2 },
     { key: 'deadline_date', label: 'Due Date', fieldType: 'date', placeholder: 'Pick date', step: 2 },
     { key: 'deadline_time', label: 'Due Time', fieldType: 'time', placeholder: 'Pick time', step: 2 },
-    { key: 'status', label: 'Current Status', options: ['Todo', 'In Progress', 'Completed'], step: 2 },
+    { key: 'status', label: 'Current Status', options: ['pending', 'completed'], step: 2 },
   ], []);
 
   const load = async (nextPage = 1, append = false) => {
@@ -49,9 +48,8 @@ export default function AssignmentsScreen() {
       setItems((current) => append ? [...current, ...rows] : rows);
       setHasMore(rows.length === 20);
       setPage(nextPage);
-      setQueryError('');
     } catch (error: any) {
-      setQueryError(error.message ?? 'Failed to load assignments');
+      showError(error.message ?? 'Failed to load assignments');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -62,7 +60,7 @@ export default function AssignmentsScreen() {
 
   const openCreate = () => { 
     setSelected(null); 
-    setDraft({ title: '', description: '', priority: 'Medium', deadline_date: '', deadline_time: '', status: 'Todo' }); 
+    setDraft({ title: '', description: '', priority: 'Medium', deadline_date: '', deadline_time: '', status: 'pending' }); 
     setMode('create'); 
   };
   const openEdit = (item: any) => { 
@@ -73,7 +71,7 @@ export default function AssignmentsScreen() {
       priority: item.priority ?? 'Medium', 
       deadline_date: item.deadline_date ?? item.deadlineDate ?? '', 
       deadline_time: item.deadline_time ?? item.deadlineTime ?? '', 
-      status: item.status ?? 'Todo' 
+      status: item.status ?? 'pending' 
     }); 
     setMode('edit'); 
   };
@@ -123,7 +121,7 @@ export default function AssignmentsScreen() {
                   <Text style={[styles.priorityText, { color: pStyle.color }]}>{item.priority?.toUpperCase() ?? 'MEDIUM'}</Text>
                 </View>
                 <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>{item.status ?? 'Todo'}</Text>
+                  <Text style={styles.statusText}>{item.status === 'pending' ? 'Pending' : item.status === 'completed' ? 'Completed' : 'Pending'}</Text>
                 </View>
               </View>
 
@@ -164,24 +162,24 @@ export default function AssignmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 14, paddingBottom: 6 },
-  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  header: { padding: 16, paddingBottom: 10, marginBottom: 8 },
+  searchCard: { marginHorizontal: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52, marginBottom: 24 },
   searchInput: { color: '#fff', flex: 1, fontSize: 15 },
-  list: { padding: 14, gap: 14, paddingBottom: 40 },
-  card: { padding: 18, gap: 12 },
+  list: { padding: 16, gap: 14, paddingBottom: 40 },
+  card: { padding: 20, gap: 14, borderRadius: 24 },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   priorityBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   priorityText: { fontWeight: '900', fontSize: 10, letterSpacing: 0.5 },
   statusBadge: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   statusText: { color: '#D8E6FF', fontWeight: '800', fontSize: 11 },
   cardContent: { gap: 6 },
-  name: { color: '#fff', fontSize: 19, fontWeight: '900', letterSpacing: -0.3 },
+  name: { color: '#fff', fontSize: 20, fontWeight: '900', letterSpacing: -0.3 },
   desc: { color: '#9EB2D3', fontSize: 14, lineHeight: 20 },
   dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
   sub: { color: '#8DA3C7', fontSize: 13, fontWeight: '600' },
-  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 12 },
+  actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 4, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)', paddingTop: 14 },
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(61, 124, 255, 0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   editText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
-  deleteBtn: { backgroundColor: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
+  deleteBtn: { backgroundColor: 'rgba(239, 68, 68, 0.1)', width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 60, fontSize: 15 },
 });

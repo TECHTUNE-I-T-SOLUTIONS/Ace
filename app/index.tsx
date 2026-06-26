@@ -2,19 +2,31 @@ import { router } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { colors } from '@/theme';
+import { useAuth } from '@/auth-context';
 
 export default function SplashScreen() {
   const scale = React.useRef(new Animated.Value(0.92)).current;
   const opacity = React.useRef(new Animated.Value(0)).current;
+  const { user, ready } = useAuth();
 
   useEffect(() => {
     Animated.parallel([
       Animated.timing(scale, { toValue: 1, duration: 700, useNativeDriver: true }),
       Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: true }),
     ]).start();
-    const timer = setTimeout(() => router.replace('/onboarding'), 1600);
+
+    const timer = setTimeout(() => {
+      if (ready && user) {
+        // User already has an active session - go straight to dashboard
+        router.replace('/(tabs)/dashboard');
+      } else if (ready) {
+        // No session - go to onboarding
+        router.replace('/onboarding');
+      }
+    }, 1600);
+
     return () => clearTimeout(timer);
-  }, []);
+  }, [ready, user]);
 
   return (
     <View style={styles.screen}>

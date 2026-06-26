@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GradientShell, GlassCard, PrimaryButton } from '@/components';
-import { colors } from '@/theme';
-import { apiGet } from '@/api';
-import { showError } from '@/toast';
-import { pickImage, storagePath, uploadToSupabase } from '@/storage';
-import { supabase } from '@/lib/supabase';
+import { GradientShell, GlassCard, PrimaryButton } from '../../src/components';
+import { colors } from '../../src/theme';
+import { apiGet } from '../../src/api';
+import { showError } from '../../src/toast';
+import { pickImage, storagePath, uploadToSupabase } from '../../src/storage';
+import { supabase } from '../../src/lib/supabase';
 
 export default function Profile() {
   const [profile, setProfile] = useState<any>(null);

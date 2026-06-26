@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GradientShell, GlassCard, PrimaryButton } from '@/components';
-import { colors } from '@/theme';
-import { ScreenShell } from '@/screen-shell';
-import { CrudModal } from '@/crud-modal';
-import { apiGetWithQuery } from '@/api';
-import { createItem, deleteItem, updateItem } from '@/api-hooks';
-import { showError } from '@/toast';
-import { SortFilterBar } from '@/filters';
+import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
+import { colors } from '../src/theme';
+import { ScreenShell } from '../src/screen-shell';
+import { CrudModal } from '../src/crud-modal';
+import { apiGetWithQuery } from '../src/api';
+import { createItem, deleteItem, updateItem } from '../src/api-hooks';
+import { showError } from '../src/toast';
+import { SortFilterBar } from '../src/filters';
 
 export default function CoursesScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -23,7 +23,6 @@ export default function CoursesScreen() {
   const [sort, setSort] = useState('created_at');
   const [order, setOrder] = useState<'asc' | 'desc'>('desc');
   const [filters, setFilters] = useState<string[]>([]);
-  const [queryError, setQueryError] = useState('');
 
   const fields = useMemo<any[]>(() => [
     { key: 'course_code', label: 'Course Code', placeholder: 'CSC 301', step: 1 },
@@ -50,9 +49,8 @@ export default function CoursesScreen() {
       setItems((current) => append ? [...current, ...rows] : rows);
       setHasMore(rows.length === 20);
       setPage(nextPage);
-      setQueryError('');
     } catch (error: any) {
-      setQueryError(error.message ?? 'Failed to load courses');
+      showError(error.message ?? 'Failed to load courses');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -169,13 +167,9 @@ export default function CoursesScreen() {
   );
 }
 
-function Action({ icon, label, danger, onPress }: { icon: keyof typeof Ionicons.glyphMap; label: string; danger?: boolean; onPress: () => void }) {
-  return <Pressable onPress={onPress} style={styles.action}><Ionicons name={icon} color={danger ? '#FF6B6B' : '#86A8FF'} size={16} /><Text style={[styles.actionText, danger && { color: '#FF6B6B' }]}>{label}</Text></Pressable>;
-}
-
 const styles = StyleSheet.create({
-  header: { padding: 14, paddingBottom: 6 },
-  searchCard: { marginHorizontal: 14, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52 },
+  header: { padding: 16, paddingBottom: 10, marginBottom: 4 },
+  searchCard: { marginHorizontal: 16, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', minHeight: 52, marginBottom: 16 },
   searchInput: { color: '#fff', flex: 1, fontSize: 15 },
   list: { padding: 14, gap: 14, paddingBottom: 40 },
   card: { padding: 18, gap: 12 },
@@ -193,8 +187,5 @@ const styles = StyleSheet.create({
   editBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(61, 124, 255, 0.1)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   editText: { color: colors.primary, fontWeight: '800', fontSize: 13 },
   deleteBtn: { backgroundColor: 'rgba(239, 68, 68, 0.1)', width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  action: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  actionText: { color: '#86A8FF', fontWeight: '800', fontSize: 12 },
   empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 40, fontSize: 15 },
-  error: { color: '#FF8A8A', paddingHorizontal: 14, fontWeight: '700' },
 });

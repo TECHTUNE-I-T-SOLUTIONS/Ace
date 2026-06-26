@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { GlassCard, GradientShell } from '@/components';
-import { colors } from '@/theme';
-import { CrudModal } from '@/crud-modal';
-import { apiGet } from '@/api';
-import { supabase } from '@/lib/supabase';
-import { showError } from '@/toast';
+import { GlassCard, GradientShell } from '../../src/components';
+import { colors } from '../../src/theme';
+import { CrudModal } from '../../src/crud-modal';
+import { apiGet } from '../../src/api';
+import { supabase } from '../../src/lib/supabase';
+import { showError } from '../../src/toast';
 
 export default function Diary() {
   const [entries, setEntries] = useState<any[]>([]);
@@ -39,7 +39,6 @@ export default function Diary() {
       title: draft.title ?? '',
       content: draft.content ?? '',
       mood: draft.mood ?? 'neutral',
-      word_count: draft.content ? draft.content.trim().split(/\s+/).filter(Boolean).length : 0,
     };
     const { error } = await supabase.from('diary_entries').insert(payload);
     if (error) throw error;
