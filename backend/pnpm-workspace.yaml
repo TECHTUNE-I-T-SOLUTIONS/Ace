@@ -1,9 +1,0 @@
-packages:
-  - '.'
-onlyBuiltDependencies:
-  - '@firebase/util'
-  - '@nestjs/core'
-  - '@prisma/client'
-  - '@prisma/engines'
-  - prisma
-  - protobufjs
