@@ -3,7 +3,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .npmrc* ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 RUN npx prisma generate
 COPY . .
 RUN pnpm run build
