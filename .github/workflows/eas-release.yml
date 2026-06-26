@@ -1,0 +1,101 @@
+name: EAS Release to GitHub
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      easBuildUrl:
+        description: "EAS Build Download URL"
+        required: false
+        type: string
+      version:
+        description: "App Version (e.g. 1.0.0)"
+        required: false
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: Get latest EAS build
+        id: get-build
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # If URL provided manually, use it
+          if [ -n "${{ github.event.inputs.easBuildUrl }}" ]; then
+            echo "download_url=${{ github.event.inputs.easBuildUrl }}" >> $GITHUB_OUTPUT
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # Get latest successful build for Android
+            BUILD_URL=$(eas build:list --platform android --status finished --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+            BUILD_VERSION=$(eas build:list --platform android --status finished --json --non-interactive | jq -r '.[0].buildVersion')
+            
+            if [ -z "$BUILD_URL" ] || [ "$BUILD_URL" = "null" ]; then
+              echo "No finished builds found"
+              exit 1
+            fi
+            
+            echo "download_url=$BUILD_URL" >> $GITHUB_OUTPUT
+            echo "version=$BUILD_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download APK
+        run: |
+          curl -L -o ace.apk "${{ steps.get-build.outputs.download_url }}"
+          ls -lh ace.apk
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get-build.outputs.version }}
+          name: ACE v${{ steps.get-build.outputs.version }}
+          body: |
+            ## ACE - Your Academic Companion
+            
+            **Version:** ${{ steps.get-build.outputs.version }}
+            
+            ### Features
+            - 📊 Grade Tracking & Analytics
+            - 📅 Assignment Management
+            - 🔔 Smart Notifications
+            - 📚 Course Organization
+            - 📈 Progress Analytics
+            - 🎯 Study Planning
+            
+            ### Installation
+            1. Download the APK below
+            2. Open the file on your Android device
+            3. Enable "Install from unknown sources" if prompted
+            4. Install and start acing your studies!
+            
+            ---
+            *Built by TECHTUNE I.T. SOLUTIONS and Mee_Tobi*
+          files: ace.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup
+        run: rm -f ace.apk

@@ -24,7 +24,7 @@
           "icon": "./assets/logo.png",
           "color": "#214FCE",
           "sounds": [
-            "./assets/notification.wav"
+            "./assets/notifications.wav"
           ]
         }
       ]
@@ -44,7 +44,6 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#0A2342"
       },
-      "googleServicesFile": "./keys/google-services.json",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
@@ -61,6 +60,9 @@
         ]
       }
     },
-    "owner": "princetechtune"
+    "owner": "princetechtune",
+    "cli": {
+      "appVersionSource": "remote"
+    }
   }
 }
