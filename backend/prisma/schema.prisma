@@ -31,12 +31,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   profile   Profile?
-  courses   Course[]
-  assignments Assignment[]
-  tests     Test[]
-  exams     Exam[]
-  studySessions StudySession[]
-  tasks     Task[]
+  courses         Course[]
+  assignments     Assignment[]
+  tests           Test[]
+  exams           Exam[]
+  studySessions  StudySession[]
+  tasks           Task[]
+  grades          Grade[]
 }
 
 model Profile {
@@ -69,6 +70,7 @@ model Course {
   assignments    Assignment[]
   tests          Test[]
   exams          Exam[]
+  grades         Grade[]
 }
 
 model Assignment {
