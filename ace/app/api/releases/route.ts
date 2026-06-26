@@ -9,6 +9,7 @@ export async function GET() {
       {
         headers: {
           Accept: "application/vnd.github.v3+json",
+          "User-Agent": "ACE-App",
         },
         next: { revalidate: 3600 },
       }

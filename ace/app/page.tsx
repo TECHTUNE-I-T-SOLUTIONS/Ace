@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import {
   BarChart3,
@@ -10,30 +12,41 @@ import {
   FolderGit2,
   ExternalLink,
 } from "lucide-react";
+import DownloadButton from "./components/DownloadButton";
+import { useEffect, useState } from "react";
 
-async function getLatestRelease() {
-  try {
-    const res = await fetch(
-      "https://api.github.com/repos/TECHTUNE-I-T-SOLUTIONS/Ace/releases/latest",
-      { next: { revalidate: 3600 } }
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    const apkAsset = data.assets?.find((asset: any) =>
-      asset.name.endsWith(".apk")
-    );
-    return {
-      version: data.tag_name || data.name,
-      url: data.html_url,
-      downloadUrl: apkAsset?.browser_download_url || null,
-      publishedAt: data.published_at,
-      notes: data.body,
-    };
-  } catch (error) {
-    console.error("Failed to fetch release:", error);
-    return null;
-  }
+interface Release {
+  version: string;
+  url: string;
+  downloadUrl: string;
+  publishedAt: string;
+  notes: string;
+  size: number | null;
 }
+
+export default function Home() {
+  const [release, setRelease] = useState<Release | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchRelease = async () => {
+      try {
+        const res = await fetch("/api/releases", {
+          next: { revalidate: 3600 },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.error) return;
+        setRelease(data);
+      } catch (error) {
+        console.error("Failed to fetch release:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRelease();
+  }, []);
 
 const features = [
   {
@@ -74,8 +87,15 @@ const features = [
   },
 ];
 
-export default async function Home() {
-  const release = await getLatestRelease();
+  if (loading) {
+    return (
+      <div className="flex flex-col flex-1 bg-gradient-to-br from-blue-400 via-slate-400 to-black dark:from-blue-400 dark:via-blue-950 dark:to-gray-800">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-white text-xl">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col flex-1 bg-gradient-to-br from-blue-400 via-slate-400 to-black dark:from-blue-400 dark:via-blue-950 dark:to-gray-800">
@@ -105,13 +125,11 @@ export default async function Home() {
               <span className="hidden sm:inline">GitHub</span>
             </a>
             {release?.downloadUrl && (
-              <a
-                href={release.downloadUrl}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-full transition-colors flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                <span className="hidden sm:inline">Download</span>
-              </a>
+              <DownloadButton
+                downloadUrl={release.downloadUrl}
+                version={release.version}
+                variant="secondary"
+              />
             )}
           </nav>
         </div>
@@ -146,13 +164,11 @@ export default async function Home() {
 
           {/* Download Button */}
           {release?.downloadUrl ? (
-            <a
-              href={release.downloadUrl}
-              className="mt-8 inline-flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-            >
-              <Download className="w-6 h-6" />
-              Download APK (v{release.version})
-            </a>
+            <DownloadButton
+              downloadUrl={release.downloadUrl}
+              version={release.version}
+              variant="primary"
+            />
           ) : (
             <div className="mt-8 px-8 py-4 bg-slate-800 text-slate-400 font-medium rounded-full">
               Download coming soon
