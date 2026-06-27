@@ -4,17 +4,6 @@ import * as Notifications from 'expo-notifications';
 import { apiJson } from './api';
 import { useAuth } from './auth-context';
 
-// Configure how notifications are shown when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
-
 export function usePushTokenRegistration() {
   const { user } = useAuth();
   const registeredRef = useRef(false);
@@ -24,6 +13,17 @@ export function usePushTokenRegistration() {
 
     async function register() {
       try {
+        // Configure how notifications are shown when app is in foreground
+        Notifications.setNotificationHandler({
+          handleNotification: async () => ({
+            shouldShowAlert: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
+            shouldShowBanner: true,
+            shouldShowList: true,
+          }),
+        });
+
         // Request permissions
         const perms: any = await Notifications.getPermissionsAsync();
         let hasPermission = perms.granted;
