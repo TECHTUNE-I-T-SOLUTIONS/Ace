@@ -1,0 +1,33 @@
+# Build artifacts
+*.apk
+*.aab
+*.ipa
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+
+# Expo build cache (can be very large)
+.expo/
+
+# UI Design files
+UI Designs/
+
+# Web folder (not needed for mobile build)
+web/
+ace/
+
+# Backend folder (not needed for mobile build)
+backend/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+*.log
+.DS_Store
+Thumbs.db
