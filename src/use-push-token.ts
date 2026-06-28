@@ -14,7 +14,7 @@ export function usePushTokenRegistration() {
     async function register() {
       try {
         // Configure how notifications are shown when app is in foreground
-        Notifications.setNotificationHandler({
+        await Notifications.setNotificationHandler({
           handleNotification: async () => ({
             shouldShowAlert: true,
             shouldPlaySound: true,
@@ -58,6 +58,8 @@ export function usePushTokenRegistration() {
         // This is expected - push tokens will work in a development build
         if (error?.message?.includes('MISSING_INSTANCEID_SERVICE') || error?.message?.includes('Fetching the token failed')) {
           console.log('Push notifications require a development build. Skipping token registration.');
+        } else if (error?.message?.includes('SQLiteException') || error?.message?.includes('database')) {
+          console.warn('Push notification database error - notifications may be limited:', error.message);
         } else {
           console.error('Failed to register push token:', error);
         }
@@ -72,7 +74,13 @@ export function usePushTokenRegistration() {
         vibrationPattern: [0, 250, 250, 250],
         lightColor: '#214FCE',
         sound: 'default',
-      }).catch(console.error);
+      }).catch((err: any) => {
+        if (err?.message?.includes('SQLiteException') || err?.message?.includes('database')) {
+          console.warn('Notification channel setup failed due to database error:', err.message);
+        } else {
+          console.error('Failed to set notification channel:', err);
+        }
+      });
     }
 
     register();
