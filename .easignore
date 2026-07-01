@@ -27,6 +27,10 @@ backend/
 .git/
 .gitignore
 
+# Native folders - use Prebuild instead of CNG
+/android
+/ios
+
 # Misc
 *.log
 .DS_Store

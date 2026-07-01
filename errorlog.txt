@@ -1,0 +1,252 @@
+06-28 01:16:39.210  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.trustlet.onbody.service.BIND pkg=com.google.android.gms }
+06-28 01:16:39.211  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.trustlet.onbody.service.BIND pkg=com.google.android.gms }
+06-28 01:16:39.213 13067 22012 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.214 13067 22012 D IMGGralloc: Gralloc Free  w:576, h:1289, f:0x1, usage:0xb66, ui64Stamp:68987 line = 2529
+06-28 01:16:39.224  7378  7378 E sion.tranengin: Not starting debugger since process cannot load the jdwp agent.
+06-28 01:16:39.242   879  2760 I ActivityManager: Process com.ace.mobile (pid 7302) has died: fg  TOP 
+06-28 01:16:39.242   879  2729 I WindowManager: WIN DEATH: Window{22361af u0 com.ace.mobile/com.ace.mobile.MainActivity}
+06-28 01:16:39.243   879  2729 W InputManager-JNI: Input channel object '22361af com.ace.mobile/com.ace.mobile.MainActivity (client)' was disposed without first being removed with the input manager!
+06-28 01:16:39.243   879  2760 D TranAppmService: remove callback due to processDied: pid = 7302, size = 0
+06-28 01:16:39.243   451   451 I Zygote  : Process 7302 exited due to signal 9 (Killed)
+06-28 01:16:39.243   879   951 I libprocessgroup: Successfully killed process cgroup uid 10385 pid 7302 in 0ms
+06-28 01:16:39.244   879 28977 D IMGGralloc: Gralloc Free  w:576, h:1289, f:0x1, usage:0xb66, ui64Stamp:68400 line = 2529
+06-28 01:16:39.247   879  7376 W DropBoxManagerService: Dropping: data_app_crash (4260 > 0 bytes)
+06-28 01:16:39.252   879  2760 D Griffin/ComponentManager: Limit Start proc com.ace.mobile restart for 3rd-normal
+06-28 01:16:39.261   879  2760 V ActivityManager: Clean up application record for ProcessRecord{9e80b10 7302:com.ace.mobile/u0a385} restarting=false allowRestart=false index=-1 replacingPid=false fromBinderDied=true
+06-28 01:16:39.261   879  2760 D os.ActivityManagerServiceLice: make process inactive com.ace.mobile(7302)
+06-28 01:16:39.263   879  2760 D TranAppmService: remove callback due to processDied: pid = 7302, size = 0
+06-28 01:16:39.269  6833  6833 I Trustlet_Onbody: Trustlet onbody is supported. [CONTEXT service_id=294 ]
+06-28 01:16:39.273   879  2760 W InputManager-JNI: Input channel object 'b1349c2 Splash Screen com.ace.mobile (client)' was disposed without first being removed with the input manager!
+06-28 01:16:39.279   879  2760 D DynamicFrameRateController: onUpdateSleep before:false, after:false
+06-28 01:16:39.281   879  2760 E WindowManagerService: open /proc/iomanager/activity error:13
+06-28 01:16:39.282   879  1145 D MemfusionImpl: onAppLaunch, nextType = 2next - ActivityInfo{2950e77 com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher}
+06-28 01:16:39.283   879  1413 I ActivityManager: Applaunch form com.ace.mobile to com.transsion.XOSLauncher.upgrade
+06-28 01:16:39.276   879   879 W com.transsion.a: type=1400 audit(0.0:13842): avc: denied { read } for name="u:object_r:vendor_pnpmgr_support_prop:s0" dev="tmpfs" ino=13674 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_pnpmgr_support_prop:s0 tclass=file permissive=0
+06-28 01:16:39.283   879   969 D MemfusionImpl: dispatch clean index=25
+06-28 01:16:39.283   879   969 D Memfusion/Compaction: doMemFusion - 2
+06-28 01:16:39.283   879   969 D Memfusion/Compaction: memFusionUpdatei: trigger = 2, MemFusionSettingsEnabled = true, MemFusionCloudEnabled = true
+06-28 01:16:39.283   879  1417 W libc    : Access denied finding property "ro.vendor.pnpmgr.game.record"
+06-28 01:16:39.283   879   969 D Memfusion/Compaction: MEMFUSION_FREE_RAM_THRESHOLD:750, mTotalRamThreshold: 750000000, curMemInfo.availMem : 584507392
+06-28 01:16:39.283   879   969 D Memfusion/Utils: getRecentTask Max Num=6
+06-28 01:16:39.284   879  1417 W libc    : Access denied finding property "ro.vendor.pnpmgr.touch.ctl"
+06-28 01:16:39.285   879  2760 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10174; state: DISABLED
+06-28 01:16:39.285   879  2760 D os.fingerprint: onActivityResume next:ActivityRecord{b9362d4 u0 com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher t3}
+06-28 01:16:39.285   879  2760 D os.fingerprint: activityComponent = ComponentInfo{com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher} inMultiWindow = false
+06-28 01:16:39.286  3289  3289 I UnlockManager-: onWindowVisibilityChanged   visibility:0
+06-28 01:16:39.288   472   472 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:68953 line = 2529
+06-28 01:16:39.276   879   879 W com.transsion.a: type=1400 audit(0.0:13843): avc: denied { read } for name="u:object_r:vendor_default_prop:s0" dev="tmpfs" ino=13651 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_default_prop:s0 tclass=file permissive=0
+06-28 01:16:39.307 13067 13374 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68947 line = 2529
+06-28 01:16:39.307 13067 13374 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68944 line = 2529
+06-28 01:16:39.325  6833  6833 I Trustlet_Onbody: (REDACTED) onbodyAlreadySet: %s
+06-28 01:16:39.326  6833  6833 I Trustlet_Onbody: (REDACTED) isOnbodySuggestionEnabledByPhenotype: %s
+06-28 01:16:39.327   879   969 D Memfusion/Utils: getRecentTasks: id = 2499 Activity = com.ace.mobile.MainActivity isExcluded = false
+06-28 01:16:39.327   879   969 D Memfusion/Utils: getRecentTasks: id = 2491 Activity = com.google.android.apps.nbu.files.home.HomeActivity isExcluded = false
+06-28 01:16:39.327   879   969 D Memfusion/Utils: getRecentTasks: id = 2485 Activity = com.android.dialer.main.impl.MainActivity isExcluded = false
+06-28 01:16:39.327   879   969 D Memfusion/Compaction: memFusionUpdatei: left history size 0
+06-28 01:16:39.328  6833  6833 I Trustlet_Onbody: (REDACTED) isTrustAgentEnabled: %s
+06-28 01:16:39.328   879   969 D Memfusion/Compaction: The count of recent_tasks has not reached the compression.
+06-28 01:16:39.328   879   969 W Debug_MemfusionImpl: doMemFusion: coast 45ms
+06-28 01:16:39.328  6833  6833 I Trustlet_Onbody: Trustlet onbody is supported. [CONTEXT service_id=294 ]
+06-28 01:16:39.328  6833  6833 I Trustlet_Onbody: (REDACTED) isSupported: %s
+06-28 01:16:39.329  6833  6833 I Trustlet_Onbody: (REDACTED) isChromeOsDevice: %s
+06-28 01:16:39.331   879  4153 W libc    : Access denied finding property "persist.vendor.dbg.disable.art"
+06-28 01:16:39.324   879   879 W Binder:879_1E: type=1400 audit(0.0:13844): avc: denied { read } for name="u:object_r:vendor_default_prop:s0" dev="tmpfs" ino=13651 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_default_prop:s0 tclass=file permissive=0
+06-28 01:16:39.333  6833  6833 I Trustlet_Onbody: (REDACTED) onbodyAlreadySet: %s
+06-28 01:16:39.334  6833  6833 I Trustlet_Onbody: (REDACTED) isOnbodySuggestionEnabledByPhenotype: %s
+06-28 01:16:39.338   879  4153 D os.fingerprint: onUpdateFocusedApp oldPackageName:null oldComponent:null newPackageName:com.transsion.XOSLauncher.upgrade newComponent:ComponentInfo{com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher} mFm :android.hardware.fingerprint.FingerprintManager@366502d
+06-28 01:16:39.342   879  4153 I WindowManager: Input focus has changed to Window{ddd21ef u0 com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher} from 22361af com.ace.mobile/com.ace.mobile.MainActivity mDisplayId 0 updateInputWindows true
+06-28 01:16:39.345  6833  6833 I Trustlet_Onbody: (REDACTED) isTrustAgentEnabled: %s
+06-28 01:16:39.346  6833  6833 I Trustlet_Onbody: Trustlet onbody is supported. [CONTEXT service_id=294 ]
+06-28 01:16:39.346  6833  6833 I Trustlet_Onbody: (REDACTED) isSupported: %s
+06-28 01:16:39.347  6833  6833 I Trustlet_Onbody: (REDACTED) isChromeOsDevice: %s
+06-28 01:16:39.348   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.348   470   470 D IMGGralloc: Gralloc alloc start  w:720, h:1612, f:0x1, usage:0x900, line = 1618
+06-28 01:16:39.351   470   470 D IMGGralloc: Gralloc Alloc end  w:720, h:1612, f:0x101, usage:0x900, handle:0xee46a780, ui64Stamp:68993, sSize:4657152, BufferName: ViewRootImpl[QuickstepLauncher]#9(BLAST Consumer)9, line = 2073
+06-28 01:16:39.351   470   470 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68993 line = 2529
+06-28 01:16:39.351  3289  7406 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68993, sSize:4657152, line = 2379
+06-28 01:16:39.352   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.352   470   470 D IMGGralloc: Gralloc alloc start  w:720, h:1612, f:0x1, usage:0x900, line = 1618
+06-28 01:16:39.354   470   470 D IMGGralloc: Gralloc Alloc end  w:720, h:1612, f:0x101, usage:0x900, handle:0xee46a780, ui64Stamp:68997, sSize:4657152, BufferName: ViewRootImpl[QuickstepLauncher]#9(BLAST Consumer)9, line = 2073
+06-28 01:16:39.354   470   470 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68997 line = 2529
+06-28 01:16:39.355  3289  7406 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68997, sSize:4657152, line = 2379
+06-28 01:16:39.355   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.355   470   470 D IMGGralloc: Gralloc alloc start  w:720, h:1612, f:0x1, usage:0x900, line = 1618
+06-28 01:16:39.357   470   470 D IMGGralloc: Gralloc Alloc end  w:720, h:1612, f:0x101, usage:0x900, handle:0xee46a780, ui64Stamp:69001, sSize:4657152, BufferName: ViewRootImpl[QuickstepLauncher]#9(BLAST Consumer)9, line = 2073
+06-28 01:16:39.358   470   470 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:69001 line = 2529
+06-28 01:16:39.358  3289  7406 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:69001, sSize:4657152, line = 2379
+06-28 01:16:39.374  3289  3440 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:69001 line = 2529
+06-28 01:16:39.375   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.375   470   470 D IMGGralloc: Gralloc alloc start  w:720, h:1612, f:0x1, usage:0xb00, line = 1618
+06-28 01:16:39.375   879  1885 W WindowManager: Failed looking up window session=Session{c67281a 13067:u0a10152} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:5894 com.android.server.wm.WindowManagerService.relayoutWindow:2400 com.android.server.wm.Session.relayout:235 
+06-28 01:16:39.378   470   470 D IMGGralloc: Gralloc Alloc end  w:720, h:1612, f:0x101, usage:0xb00, handle:0xee46a780, ui64Stamp:69005, sSize:4657152, BufferName: ViewRootImpl[QuickstepLauncher]#9(BLAST Consumer)9, line = 2073
+06-28 01:16:39.378 13067 13160 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:68953 line = 2529
+06-28 01:16:39.378   470   470 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69005 line = 2529
+06-28 01:16:39.379  3289  3440 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69005, sSize:4657152, line = 2379
+06-28 01:16:39.379   879  1271 W libc    : Access denied finding property "persist.vendor.dbg.disable.art"
+06-28 01:16:39.372   879   879 W Binder:879_7: type=1400 audit(0.0:13845): avc: denied { read } for name="u:object_r:vendor_default_prop:s0" dev="tmpfs" ino=13651 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_default_prop:s0 tclass=file permissive=0
+06-28 01:16:39.385   879  1271 E HighRefreshRateBlacklist: mWhitelistedPackages change rate= 90
+06-28 01:16:39.394   530   569 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:68953 line = 2529
+06-28 01:16:39.396   879   941 W ActivityManager: setHasOverlayUi called on unknown pid: 7302
+06-28 01:16:39.404   530   530 I Layer   : name=ddd21ef com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher, id=4832, visible=0, DrawingState.flags=0x101, paused=0, portal=-1, param=NOT_TOUCH_MODAL | LAYOUT_IN_SCREEN | LAYOUT_INSET_DECOR | SHOW_WALLPAPER | SPLIT_TOUCH | HARDWARE_ACCELERATED | DRAWS_SYSTEM_BAR_BACKGROUNDS, feature=0x0
+06-28 01:16:39.413   879  2854 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 1000; state: DISABLED
+06-28 01:16:39.415   530   567 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69005, sSize:4657152, line = 2379
+06-28 01:16:39.415   530   567 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.420   530   530 I Layer   : name=ddd21ef com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher, id=4832, visible=0, DrawingState.flags=0x101, paused=0, portal=-1, param=NOT_TOUCH_MODAL | LAYOUT_IN_SCREEN | LAYOUT_INSET_DECOR | SHOW_WALLPAPER | SPLIT_TOUCH | HARDWARE_ACCELERATED | DRAWS_SYSTEM_BAR_BACKGROUNDS, feature=0x0
+06-28 01:16:39.422   879  2760 W WindowManager: Failed looking up window session=Session{c67281a 13067:u0a10152} callers=com.android.server.wm.WindowManagerService.windowForClientLocked:5894 com.android.server.wm.WindowManagerService.removeWindow:2194 com.android.server.wm.Session.remove:218 
+06-28 01:16:39.423   879  2854 D os.ActivityManagerServiceLice: make process active com.transsion.tranengine(7378)
+06-28 01:16:39.426  3289  3289 D SharedPreferencesPolicy: checkFinishers msg.what :159
+06-28 01:16:39.428  3289  3347 D SessionLifecycleClient: Sending lifecycle 1 to service
+06-28 01:16:39.428  3289  3437 D SessionLifecycleService: Activity foregrounding at 51447044.
+06-28 01:16:39.428   879   879 W Binder:879_16: type=1400 audit(0.0:13846): avc: denied { read } for name="u:object_r:vendor_default_prop:s0" dev="tmpfs" ino=13651 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_default_prop:s0 tclass=file permissive=0
+06-28 01:16:39.436   879  2760 W libc    : Access denied finding property "persist.vendor.dbg.disable.art"
+06-28 01:16:39.436   530   530 I Layer   : name=ddd21ef com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher, id=4832, visible=0, DrawingState.flags=0x101, paused=0, portal=-1, param=NOT_TOUCH_MODAL | LAYOUT_IN_SCREEN | LAYOUT_INSET_DECOR | SHOW_WALLPAPER | SPLIT_TOUCH | HARDWARE_ACCELERATED | DRAWS_SYSTEM_BAR_BACKGROUNDS, feature=0x0
+06-28 01:16:39.436   879  1034 D performance: updateAppMem: error pid= -1
+06-28 01:16:39.437   478   478 D vendor.unisoc.hardware.power-service: Enter getSceneIdByName: sceneName:com.transsion.XOSLauncher.upgrade
+06-28 01:16:39.438  7378  7378 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 1000; state: ENABLED
+06-28 01:16:39.439   472   472 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x102, usage:0xb00, ui64Stamp:11372, sSize:4644864, line = 2379
+06-28 01:16:39.439   879   938 D BroadcastQueue: Add broadcast <BroadcastRecord{285ebaa u-1 android.intent.action.DROPBOX_ENTRY_ADDED}> into [parallel | background], pending size 0
+06-28 01:16:39.440   879   938 D BroadcastQueue: Add broadcast <BroadcastRecord{4f539b u-1 android.intent.action.DROPBOX_ENTRY_ADDED}> into [ordered | background], pending size 10
+06-28 01:16:39.440   879   938 D BroadcastQueue: Header is BroadcastRecord{15b821c u0 com.facebook.rti.fbns.intent.RECEIVE} now
+06-28 01:16:39.440  3289  3390 D TmcApp:ByteAppManager: setAppIfNecessary
+06-28 01:16:39.440   879   949 D BroadcastQueue: Done with parallel broadcast [background] [BroadcastRecord{285ebaa u-1 android.intent.action.DROPBOX_ENTRY_ADDED}]
+06-28 01:16:39.441   879   938 W Looper  : Slow dispatch took 192ms android.fg h=com.android.server.DropBoxManagerService$DropBoxManagerBroadcastHandler c=null m=1
+06-28 01:16:39.443  6950  6963 D EventBus: No subscribers registered for event class com.scene.zeroscreen.bean.event.RecentDataReadyEvent
+06-28 01:16:39.443  3289  3390 D LatestUseUtils: getLogoWithoutBadge -> null
+06-28 01:16:39.443  6950  6963 D EventBus: No subscribers registered for event class org.greenrobot.eventbus.e
+06-28 01:16:39.451  7378  7378 D os.SingleLiceFactory: using android.graphics.IGraphicLice$DefaultImpl@fae881 instead of com.transsion.typeface.TypefaceLiceFactory  from android.graphics.IGraphicLice
+06-28 01:16:39.451  7378  7378 D os.LiceInfo: instance successfully. com.transsion.graphics.GraphicLice@2727d26 from android.graphics.IGraphicLice
+06-28 01:16:39.453   530   530 I Layer   : name=ddd21ef com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher, id=4832, visible=0, DrawingState.flags=0x101, paused=0, portal=-1, param=NOT_TOUCH_MODAL | LAYOUT_IN_SCREEN | LAYOUT_INSET_DECOR | SHOW_WALLPAPER | SPLIT_TOUCH | HARDWARE_ACCELERATED | DRAWS_SYSTEM_BAR_BACKGROUNDS, feature=0x0
+06-28 01:16:39.461   879   941 D SSense  : windowsChanged
+06-28 01:16:39.464   472   472 I SPRDHWComposer: SprdDrm:: GetConfigs , [0]
+06-28 01:16:39.464   879  4153 D os.permission.PermissionInfo: checkPermission 10174:android.permission.ACCESS_SHORTCUTS:false
+06-28 01:16:39.464   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.464   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.465   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.465   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.465  3289  3289 D MultiLinkManager: smart_link is not supported
+06-28 01:16:39.465   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.465   472   472 D SPRDHWComposer: HWCDisplay::get_display_attribute <357>: config = 0
+06-28 01:16:39.465   530   778 E HWComposer: getAttribute: getDisplayAttribute failed for display 0: BadConfig (1)
+06-28 01:16:39.472   879  1885 D DynamicFrameRateController: onAfterActivityResumed packageName: com.transsion.XOSLauncher.upgrade, activityName: ComponentInfo{com.transsion.XOSLauncher.upgrade/com.android.quickstep.src.com.android.launcher3.uioverrides.QuickstepLauncher}
+06-28 01:16:39.472   879  1885 I ActivityTaskManager: LUCID activityResumed package name: com.transsion.XOSLauncher.upgrade
+06-28 01:16:39.473   879   941 I LightsService: LUCID hook setLucidFgApp  com.transsion.XOSLauncher.upgrade 
+06-28 01:16:39.473   879   941 E system_server: LucidSystemServerApi::onSetLucidFgApp
+06-28 01:16:39.474   879  4153 W libc    : Access denied finding property "persist.vendor.dbg.disable.art"
+06-28 01:16:39.468   879   879 W Binder:879_1E: type=1400 audit(0.0:13847): avc: denied { read } for name="u:object_r:vendor_default_prop:s0" dev="tmpfs" ino=13651 scontext=u:r:system_server:s0 tcontext=u:object_r:vendor_default_prop:s0 tclass=file permissive=0
+06-28 01:16:39.476   530  1608 I libPowerStretch: LucidSFLogic::handleLucidMsg 03 end
+06-28 01:16:39.476   530   778 I libPowerStretch: LucidSFLogic::handleLucidMsg Done
+06-28 01:16:39.481  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.trustlet.place.service.BIND pkg=com.google.android.gms }
+06-28 01:16:39.481  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.trustlet.place.service.BIND pkg=com.google.android.gms }
+06-28 01:16:39.483  6833  6920 W ServiceBindIntentUtils: Dynamic lookup for intent failed for action: com.google.android.gms.onboardingconsent.api.ConsentManagerApiService.START
+06-28 01:16:39.486  6833  6933 I FinderService: (REDACTED) enablementStates %s %s %s
+06-28 01:16:39.489   879  4153 V AlarmManager: set(PendingIntent{8e8598b: PendingIntentRecord{4d4ff2e com.google.android.gms/com.google.android.gms.scheduler broadcastIntent}}) : type=3 listener=null listenerTag=null triggerAtTime=69078285 win=3600000 tElapsed=69078285 maxElapsed=72678285 interval=0 flags=0x0
+06-28 01:16:39.490   879  4153 D AlarmManagerService: set alarm to kernel: 62312.890000000, type=2 
+06-28 01:16:39.491   879  4153 D AlarmManagerService: set alarm to kernel: 62312.890000000, type=2 
+06-28 01:16:39.495   879  4153 W ActivityManager: Unable to start service Intent { act=com.google.android.gms.onboardingconsent.api.ConsentManagerApiService.START pkg=com.google.android.gms } U=0: not found
+06-28 01:16:39.501   879  4153 W ActivityManager: Unbind failed: could not find connection for android.os.BinderProxy@fc6e81
+06-28 01:16:39.503  6833  6920 W GmsClient: unable to connect to service: com.google.android.gms.onboardingconsent.api.ConsentManagerApiService.START on com.google.android.gms
+06-28 01:16:39.520  6833  6833 I Trustlet_Place: (REDACTED) [PlaceTrustletChimeraService] Trusted Places isSupported: %s
+06-28 01:16:39.524   879  1033 D performance: Stop-LRU skip com.google.android.webview is webview
+06-28 01:16:39.540   879  1885 V AlarmManager: set(PendingIntent{a691b75: PendingIntentRecord{4d4ff2e com.google.android.gms/com.google.android.gms.scheduler broadcastIntent}}) : type=3 listener=null listenerTag=null triggerAtTime=69070303 win=3600000 tElapsed=69070303 maxElapsed=72670303 interval=0 flags=0x0
+06-28 01:16:39.541   879  1885 D AlarmManagerService: set alarm to kernel: 62312.890000000, type=2 
+06-28 01:16:39.541   879  1885 D AlarmManagerService: set alarm to kernel: 62312.890000000, type=2 
+06-28 01:16:39.550  6833  7143 I NetworkManagementSocketTagger: tagSocketFd(-1, 1031, -1) failed with errno-9
+06-28 01:16:39.560   879  1033 D performance: LRU skip stop: {com.microsoft.appmanager=notification, com.transsion.phonemanager=adj<=200, com.google.android.gms=adj<=200, com.instagram.android=adj<=200, com.whatsapp.w4b=favorite, com.google.android.webview=webview, com.hoffnung=adj<=200, com.transsion.tranengine=adj<=200, com.android.phone=adj<=200, com.transsion.camera=adj<=200, com.facebook.appmanager=adj<=200, com.sp.protector.free=idleTime, com.transsnet.store=foreground service, com.android.systemui=wallpaper, com.transsion.phonemaster=adj<=200, com.android.se=adj<=200, com.whatsapp=favorite, com.ace.mobile=focus, com.google.android.tts=inputMethods, com.sprd.srmi=adj<=200, com.transsion.statisticalsales=adj<=200, com.android.vending=idleTime, com.android.bluetooth=adj<=200, com.transsion.faceid=adj<=200, com.transsion.trancare=adj<=200, com.android.mtp=adj<=200, com.google.android.inputmethod.latin=inputMethods, com.transsion.plat.appupdate=adj<=200, com.android.providers.media.module=adj<=200, com.google.android.gsf=adj<=200}, swapKill: -1
+06-28 01:16:39.562   879  1033 I ActivityManager: Killing 4967:com.google.android.ext.services/u0a180 (adj 500): rampolicy available memory:561
+06-28 01:16:39.562   879  1033 V ActivityManager: Clean up application record for ProcessRecord{98fc993 4967:com.google.android.ext.services/u0a180} restarting=false allowRestart=true index=-1 replacingPid=false fromBinderDied=false
+06-28 01:16:39.563   879  1033 D os.ActivityManagerServiceLice: make process inactive com.google.android.ext.services(4967)
+06-28 01:16:39.564   879  1033 W ActivityManager: Scheduling restart of crashed service com.google.android.ext.services/android.ext.services.notification.Assistant in 20381ms for connection
+06-28 01:16:39.564   879  1033 W ActivityManager: Scheduling restart of crashed service com.google.android.ext.services/com.android.textclassifier.DefaultTextClassifierService in 30381ms for connection
+06-28 01:16:39.564   879  1033 W ActivityManager: Scheduling restart of crashed service com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl in 40381ms for connection
+06-28 01:16:39.565   879  1033 D TranAppmService: remove callback due to processDied: pid = 4967, size = 0
+06-28 01:16:39.573  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentApiService }
+06-28 01:16:39.574  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.common.telemetry.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentApiService }
+06-28 01:16:39.586  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.time.trustedtime.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+06-28 01:16:39.586  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.time.trustedtime.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+06-28 01:16:39.595  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.pseudonymous.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentApiService }
+06-28 01:16:39.595  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.pseudonymous.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentApiService }
+06-28 01:16:39.601   451   451 I Zygote  : Process 4967 exited due to signal 9 (Killed)
+06-28 01:16:39.602   879   879 I TextClassificationManagerService: onServiceDisconnected called with ComponentInfo{com.google.android.ext.services/com.android.textclassifier.DefaultTextClassifierService}
+06-28 01:16:39.602   879  2784 V ActivityManager: Got obituary of 4967:com.google.android.ext.services
+06-28 01:16:39.603   879  2854 D NotificationAssistants: Removing active service ComponentInfo{com.google.android.ext.services/android.ext.services.notification.Assistant}
+06-28 01:16:39.604  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.usagereporting.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+06-28 01:16:39.604  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.usagereporting.service.START dat=chimera-action: cmp=com.google.android.gms/.chimera.PersistentDirectBootAwareApiService }
+06-28 01:16:39.608   879   951 I libprocessgroup: Successfully killed process cgroup uid 10180 pid 4967 in 44ms
+06-28 01:16:39.612   879   879 V NotificationAssistants: 0 notification assistant connection lost: ComponentInfo{com.google.android.ext.services/android.ext.services.notification.Assistant}
+06-28 01:16:39.615   879  2854 D NotificationListeners: Removing active service ComponentInfo{com.google.android.ext.services/android.ext.services.notification.Assistant}
+06-28 01:16:39.616  6854  6854 I AdvertisingIdClient: getting error as 17: API: ClientTelemetry.API is not available on this device. Connection failed with: ConnectionResult{statusCode=API_DISABLED_FOR_CONNECTION, resolution=null, message=null, clientMethodKey=null}
+06-28 01:16:39.618  3289  3440 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0x900, ui64Stamp:68997 line = 2529
+06-28 01:16:39.619   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.619   470   470 D IMGGralloc: Gralloc alloc start  w:720, h:1612, f:0x1, usage:0xb00, line = 1618
+06-28 01:16:39.622   470   470 D IMGGralloc: Gralloc Alloc end  w:720, h:1612, f:0x101, usage:0xb00, handle:0xee46a780, ui64Stamp:69035, sSize:4657152, BufferName: ViewRootImpl[QuickstepLauncher]#9(BLAST Consumer)9, line = 2073
+06-28 01:16:39.623  3289  3440 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69035, sSize:4657152, line = 2379
+06-28 01:16:39.625   530  1608 E HWComposer: getSupportedContentTypes: getSupportedContentTypes failed for display 0: Unsupported (8)
+06-28 01:16:39.626   470   470 D IMGGralloc: Gralloc Free  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69035 line = 2529
+06-28 01:16:39.633  7378  7378 V GraphicsEnvironment: ANGLE Developer option for 'com.transsion.tranengine' set to: 'default'
+06-28 01:16:39.633  7378  7378 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+06-28 01:16:39.637  7378  7378 I LoadedApk: No resource references to update in package com.transsion.theme.icon
+06-28 01:16:39.638  7378  7378 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+06-28 01:16:39.639  7378  7378 D NetworkSecurityConfig: No Network Security Config specified, using platform default
+06-28 01:16:39.640   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 91832026 (unbound)]
+06-28 01:16:39.641   530  1608 D IMGGralloc: Gralloc Register  w:720, h:1612, f:0x101, usage:0xb00, ui64Stamp:69035, sSize:4657152, line = 2379
+06-28 01:16:39.642   530  1608 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.641   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 199692842 (unbound)]
+06-28 01:16:39.644   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 81833582 (unbound)]
+06-28 01:16:39.645  6833  7067 W Settings: Setting airplane_mode_on has moved from android.provider.Settings.System to android.provider.Settings.Global, returning read-only value.
+06-28 01:16:39.646   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 145252117 (unbound)]
+06-28 01:16:39.646   478   478 D PowerHAL: ###Exit launch scene bgn###
+06-28 01:16:39.646   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpufreq/policy0/scaling_min_freq: 1200000
+06-28 01:16:39.646   478   478 D PowerHAL: Enter common_clear: 
+06-28 01:16:39.646   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq: 1200000
+06-28 01:16:39.646   478   478 D PowerHAL: Enter common_clear: 
+06-28 01:16:39.647   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpufreq/policy4/scaling_min_freq: 1600000
+06-28 01:16:39.647   478   478 D PowerHAL: Enter common_clear: 
+06-28 01:16:39.647   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpufreq/policy4/scaling_max_freq: 1600000
+06-28 01:16:39.647   478   478 D PowerHAL: Enter common_clear: 
+06-28 01:16:39.647   478   478 D PowerHAL: Enter devfreq_ddr_set: enable:0, duration: 0, /sys/class/devfreq/scene-frequency/sprd-governor/scene_boost_dfs: max
+06-28 01:16:39.648   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 144684752 (unbound)]
+06-28 01:16:39.648   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/block/mmcblk0/queue/read_ahead_kb: 256
+06-28 01:16:39.648   478   478 D PowerHAL: Enter common_clear: 
+06-28 01:16:39.649   478   478 D PowerHAL: Enter common_subsys_set: enable:0, duration: 0, subsys:uclamp: conf_4:4
+06-28 01:16:39.649   478   478 D PowerHAL: Enter common_subsys_clear: uclamp
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu0/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu1/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu2/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu3/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu4/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu5/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu6/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: Enter common_set: enable:0, duration: 0, /sys/devices/system/cpu/cpu7/cpuidle/state1/disable: 1
+06-28 01:16:39.650   478   478 D PowerHAL: ###Exit launch scene end###
+06-28 01:16:39.656   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.656   470   470 D IMGGralloc: Gralloc alloc start  w:798, h:1690, f:0x1, usage:0xb00, line = 1618
+06-28 01:16:39.657   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 199387609 (unbound)]
+06-28 01:16:39.658   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 179925481 (unbound)]
+06-28 01:16:39.658   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 176953255 (unbound)]
+06-28 01:16:39.658   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 22957570 (unbound)]
+06-28 01:16:39.658   530   530 E libPowerStretch: [LUCID] mPowerManager->setLucidFactorNotify call
+06-28 01:16:39.658   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 4200101 (unbound)]
+06-28 01:16:39.658   879  2784 E PowerManagerService: LUCID calling setLucidFactor
+06-28 01:16:39.658   879  2784 I LightsService: LUCID hook setLucidFactor factor 0 
+06-28 01:16:39.658   879  2784 E system_server: LucidSystemServerApi::onSetLucidFactor
+06-28 01:16:39.658   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 258455579 (unbound)]
+06-28 01:16:39.659   879   879 W AutofillManagerServiceImpl: remote service died: RemoteInlineSuggestionRenderService[ComponentInfo{com.google.android.ext.services/android.ext.services.autofill.InlineSuggestionRenderServiceImpl} 153341368 (unbound)]
+06-28 01:16:39.659   470   470 D IMGGralloc: Gralloc Alloc end  w:798, h:1690, f:0x101, usage:0xb00, handle:0xee46a780, ui64Stamp:69038, sSize:5427200, BufferName: ViewRootImpl[QuickstepLauncher]#0(BLAST Consumer)0, line = 2073
+06-28 01:16:39.659   470   470 D IMGGralloc: Gralloc Free  w:798, h:1690, f:0x101, usage:0xb00, ui64Stamp:69038 line = 2529
+06-28 01:16:39.660  6950  7327 D IMGGralloc: Gralloc Register  w:798, h:1690, f:0x101, usage:0xb00, ui64Stamp:69038, sSize:5427200, line = 2379
+06-28 01:16:39.662   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.663   470   470 D IMGGralloc: Gralloc alloc start  w:798, h:1690, f:0x1, usage:0x900, line = 1618
+06-28 01:16:39.666  6833  6833 D BoundBrokerSvc: onBind: Intent { act=com.google.android.gms.nearby.presence.service.START cmp=com.google.android.gms/.chimera.PersistentApiServiceNoInstantApps }
+06-28 01:16:39.666  6833  6833 D BoundBrokerSvc: Loading bound service for intent: Intent { act=com.google.android.gms.nearby.presence.service.START cmp=com.google.android.gms/.chimera.PersistentApiServiceNoInstantApps }
+06-28 01:16:39.667   470   470 D IMGGralloc: Gralloc Alloc end  w:798, h:1690, f:0x101, usage:0x900, handle:0xee46a780, ui64Stamp:69042, sSize:5427200, BufferName: ViewRootImpl[QuickstepLauncher]#0(BLAST Consumer)0, line = 2073
+06-28 01:16:39.667   470   470 D IMGGralloc: Gralloc Free  w:798, h:1690, f:0x101, usage:0x900, ui64Stamp:69042 line = 2529
+06-28 01:16:39.668   879   941 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{45d833f u0 com.ace.mobile/.MainActivity t-1 f}}
+06-28 01:16:39.668  6950  7411 D IMGGralloc: Gralloc Register  w:798, h:1690, f:0x101, usage:0x900, ui64Stamp:69042, sSize:5427200, line = 2379
+06-28 01:16:39.669   470   470 D IMGGralloc: GBuffer--------------(*format)=1
+06-28 01:16:39.669   470   470 D IMGGralloc: Gralloc alloc start  w:798, h:1690, f:0x1, usage:0x900, line = 1618
+06-28 01:16:39.670  7378  7378 I EngineService: tranfs availSize = 41
+06-28 01:16:39.671  7378  7378 I EngineService: isTranFsExist = true
+06-28 01:16:39.673  3289  3289 D SharedPreferencesPolicy: checkFinishers msg.what :159
+06-28 01:16:39.674   470   470 D IMGGralloc: Gralloc Alloc end  w:798, h:1690, f:0x101, usage:0x900, handle:0xee46a780, ui64Stamp:69046, sSize:5427200, BufferName: ViewRootImpl[QuickstepLauncher]#0(BLAST Consumer)0, line = 2073
+06-28 01:16:39.674   470   470 D IMGGralloc: Gralloc Free  w:798, h:1690, f:0x101, usage:0x900, ui64Stamp:69046 line = 2529
+06-28 01:16:39.675  6950  7411 D IMGGralloc: Gralloc Register  w:798, h:1690, f:0x101, usage:0x900, ui64Stamp:69046, sSize:5427200, line = 2379

@@ -21,6 +21,8 @@ backend/.turbo/
 !backend/.env.example
 !.env.local.example
 !backend/.env.local.example
+.env*.local
+.env.local
 
 # Logs
 npm-debug.log*
