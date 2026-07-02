@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { HealthController } from './common/health.controller';
+import { DetailsController } from './common/details.controller';
 import { PrismaService } from './database/prisma.service';
 import { SupabaseModule } from './supabase/supabase.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -14,6 +15,7 @@ import { GradesModule } from './grades/grades.module';
 import { ExamsModule } from './exams/exams.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { RemindersController } from './notifications/reminders.controller';
 import { NotesModule } from './notes/notes.module';
 import { SettingsModule } from './settings/settings.module';
 import { SearchModule } from './search/search.module';
@@ -50,7 +52,7 @@ import { StudySessionsModule } from './study-sessions/study-sessions.module';
     SearchModule,
     AiModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, DetailsController, RemindersController],
   providers: [PrismaService],
 })
 export class AppModule {}

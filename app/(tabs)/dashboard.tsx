@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassCard, GradientShell, PrimaryButton } from '../../src/components';
@@ -7,8 +7,10 @@ import { apiGet } from '../../src/api';
 import { showError, showSuccess } from '../../src/toast';
 import { useAuth } from '../../src/auth-context';
 import { usePushTokenRegistration } from '../../src/use-push-token';
+import { useReminderChecker } from '../../src/use-reminder-checker';
 import LogoutModal from '../../src/logout-modal';
 import { colors } from '../../src/theme';
+import { formatDate, formatTime } from '../../src/utils/date-utils';
 
 export default function Dashboard() {
   const { signOut } = useAuth();
@@ -18,9 +20,15 @@ export default function Dashboard() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showLogout, setShowLogout] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
+  const [reminderData, setReminderData] = useState<any>(null);
+  const reminderShownRef = useRef<Set<string>>(new Set());
 
   // Register push token on mount
   usePushTokenRegistration();
+  
+  // Check reminders every 5 minutes
+  useReminderChecker(5 * 60 * 1000);
 
   const completionMissing = useMemo(() => {
     if (!profile) return [];
@@ -47,6 +55,37 @@ export default function Dashboard() {
         setAgenda(calendar);
         const unread = (notifs.data ?? notifs ?? []).filter((n: any) => !n.is_read).length;
         setUnreadCount(unread);
+        
+        // Show reminder modal if there are upcoming events
+        const today = new Date().getDay();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const todayName = dayNames[today];
+        
+        const todayClasses = calendar?.courses?.filter((c: any) => {
+          const courseDay = c.day_of_week ?? c.dayOfWeek;
+          return courseDay === todayName || courseDay === String(today);
+        }) || [];
+        
+        const upcomingAssignments = calendar?.assignments?.filter((a: any) => {
+          if (!a.deadline_date) return false;
+          const deadline = new Date(a.deadline_date);
+          const now = new Date();
+          const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+          return diffDays >= 0 && diffDays <= 3;
+        }) || [];
+        
+        // Create a unique key for this reminder set
+        const reminderKey = `${todayClasses.length}-${upcomingAssignments.length}-${today}`;
+        
+        // Only show reminder once per day
+        if ((todayClasses.length > 0 || upcomingAssignments.length > 0) && !reminderShownRef.current.has(reminderKey)) {
+          setReminderData({
+            classes: todayClasses,
+            assignments: upcomingAssignments,
+          });
+          setShowReminder(true);
+          reminderShownRef.current.add(reminderKey);
+        }
       })
       .catch((error) => showError(error.message))
       .finally(() => setLoading(false));
@@ -58,10 +97,10 @@ export default function Dashboard() {
   const displayFaculty = profile?.faculty || 'Faculty not set';
 
   const stats = [
-    { label: 'Courses', value: analytics?.courses ?? profile?.courses_count ?? 0, accent: '#3D7CFF' },
-    { label: 'Assignments', value: analytics?.assignments ?? profile?.assignments_count ?? 0, accent: '#B14CFF' },
-    { label: 'Tests', value: analytics?.tests ?? 0, accent: '#F59E0B' },
-    { label: 'Exams', value: analytics?.exams ?? 0, accent: '#10C06D' },
+    { label: 'Courses', value: analytics?.courses ?? profile?.courses_count ?? 0, accent: '#3D7CFF', route: '/courses' },
+    { label: 'Assignments', value: analytics?.assignments ?? profile?.assignments_count ?? 0, accent: '#B14CFF', route: '/assignments' },
+    { label: 'Tests', value: analytics?.tests ?? 0, accent: '#F59E0B', route: '/tests' },
+    { label: 'Exams', value: analytics?.exams ?? 0, accent: '#FF5C62', route: '/exams' },
   ];
 
   const goToCompleteProfile = () => router.push('/(auth)/profile-setup');
@@ -71,7 +110,17 @@ export default function Dashboard() {
     router.replace('/(auth)/login');
   };
 
-  const classItems = agenda?.courses ?? [];
+  const todayClasses = useMemo(() => {
+    if (!agenda?.courses) return [];
+    const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const todayName = dayNames[today];
+    return agenda.courses.filter((course: any) => {
+      const courseDay = course.day_of_week ?? course.dayOfWeek;
+      return courseDay === todayName || courseDay === String(today);
+    }).slice(0, 4);
+  }, [agenda]);
+  
   const assignmentItems = agenda?.assignments ?? [];
 
   return (
@@ -124,39 +173,52 @@ export default function Dashboard() {
 
         <View style={styles.statsRow}>
           {stats.map((item) => (
-            <GlassCard key={item.label} style={styles.statCard}>
-              <View style={[styles.statIcon, { backgroundColor: item.accent }]}>
-                <Ionicons name="stats-chart-outline" size={18} color="#fff" />
-              </View>
-              <Text style={styles.statValue}>{item.value}</Text>
-              <Text style={styles.statLabel}>{item.label}</Text>
-            </GlassCard>
+            <Pressable key={item.label} onPress={() => router.push(item.route)} style={styles.statCard}>
+              <GlassCard style={styles.statCard}>
+                <View style={[styles.statIcon, { backgroundColor: item.accent }]}>
+                  <Ionicons name="stats-chart-outline" size={18} color="#fff" />
+                </View>
+                <Text style={styles.statValue}>{item.value}</Text>
+                <Text style={styles.statLabel}>{item.label}</Text>
+              </GlassCard>
+            </Pressable>
           ))}
         </View>
 
-        <Section title="Today's Classes" action={String(classItems.length)} />
+        <Section title="Today's Classes" action={String(todayClasses.length)} />
         <GlassCard style={styles.listCard}>
-          {classItems.length ? classItems.slice(0, 4).map((item: any, i: number) => (
-            <View key={item.id ?? `${item.course_title}-${i}`} style={[styles.rowItem, i !== Math.min(classItems.length, 4) - 1 && styles.rowDivider]}>
+          {todayClasses.length ? todayClasses.map((item: any, i: number) => (
+            <Pressable 
+              key={item.id ?? `${item.course_title}-${i}`} 
+              style={[styles.rowItem, i !== todayClasses.length - 1 && styles.rowDivider]}
+              onPress={() => router.push({ pathname: '/details', params: { type: 'course', id: item.id } })}
+            >
               <View>
                 <Text style={styles.itemTitle}>{item.course_title ?? item.courseTitle ?? 'Untitled course'}</Text>
                 <Text style={styles.itemSub}>{item.venue ?? 'Venue not set'}</Text>
               </View>
-              <Text style={styles.itemTime}>{item.start_time ?? item.startTime ?? 'TBD'}</Text>
-            </View>
-          )) : <Text style={styles.empty}>No classes scheduled yet.</Text>}
+              <View style={{ alignItems: 'flex-end' }}>
+                <Text style={styles.itemTime}>{formatTime(item.start_time ?? item.startTime)}</Text>
+                <Text style={styles.itemTime}>{formatTime(item.end_time ?? item.endTime)}</Text>
+              </View>
+            </Pressable>
+          )) : <Text style={styles.empty}>No classes scheduled for today.</Text>}
         </GlassCard>
 
         <Section title="Upcoming Assignments" action={String(assignmentItems.length)} />
         <GlassCard style={styles.listCard}>
           {assignmentItems.length ? assignmentItems.slice(0, 4).map((item: any, i: number) => (
-            <View key={item.id ?? `${item.title}-${i}`} style={[styles.rowItem, i !== Math.min(assignmentItems.length, 4) - 1 && styles.rowDivider]}>
+            <Pressable 
+              key={item.id ?? `${item.title}-${i}`} 
+              style={[styles.rowItem, i !== Math.min(assignmentItems.length, 4) - 1 && styles.rowDivider]}
+              onPress={() => router.push({ pathname: '/details', params: { type: 'assignment', id: item.id } })}
+            >
               <View>
                 <Text style={styles.itemTitle}>{item.title}</Text>
                 <Text style={styles.itemSub}>{item.description ?? 'No description'}</Text>
               </View>
-              <Text style={styles.itemTime}>{item.deadline_date ? new Date(item.deadline_date).toLocaleDateString() : 'TBD'}</Text>
-            </View>
+              <Text style={styles.itemTime}>{formatDate(item.deadline_date)}</Text>
+            </Pressable>
           )) : <Text style={styles.empty}>No assignments yet.</Text>}
         </GlassCard>
       </ScrollView>
@@ -166,6 +228,83 @@ export default function Dashboard() {
         onClose={() => setShowLogout(false)}
         onConfirm={handleSignOut}
       />
+
+      {/* Daily Reminder Modal */}
+      <Modal visible={showReminder} transparent animationType="fade" onRequestClose={() => setShowReminder(false)}>
+        <Pressable style={styles.reminderBackdrop} onPress={() => setShowReminder(false)}>
+          <Pressable style={styles.reminderCard} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.reminderHeader}>
+              <View style={styles.reminderIcon}>
+                <Ionicons name="alarm" size={28} color={colors.warning} />
+              </View>
+              <Text style={styles.reminderTitle}>Daily Reminder</Text>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {reminderData?.classes?.length > 0 && (
+                <View style={styles.reminderSection}>
+                  <Text style={styles.reminderSectionTitle}>Today's Classes</Text>
+                  {reminderData.classes.slice(0, 3).map((item: any, i: number) => (
+                    <Pressable 
+                      key={i} 
+                      style={styles.reminderItem}
+                      onPress={() => {
+                        setShowReminder(false);
+                        router.push({ pathname: '/details', params: { type: 'course', id: item.id } });
+                      }}
+                    >
+                      <View style={styles.reminderItemIcon}>
+                        <Ionicons name="book" size={18} color={colors.primary} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.reminderItemTitle}>{item.course_title ?? item.courseTitle}</Text>
+                        <Text style={styles.reminderItemMeta}>
+                          {item.start_time ?? 'TBD'} - {item.end_time ?? 'TBD'} • {item.venue ?? 'Venue TBD'}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              {reminderData?.assignments?.length > 0 && (
+                <View style={styles.reminderSection}>
+                  <Text style={styles.reminderSectionTitle}>Upcoming Assignments</Text>
+                  {reminderData.assignments.slice(0, 3).map((item: any, i: number) => (
+                    <Pressable 
+                      key={i} 
+                      style={styles.reminderItem}
+                      onPress={() => {
+                        setShowReminder(false);
+                        router.push({ pathname: '/details', params: { type: 'assignment', id: item.id } });
+                      }}
+                    >
+                      <View style={[styles.reminderItemIcon, { backgroundColor: 'rgba(177, 76, 255, 0.1)' }]}>
+                        <Ionicons name="document-text" size={18} color="#B14CFF" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.reminderItemTitle}>{item.title}</Text>
+                        <Text style={styles.reminderItemMeta}>
+                          Due: {formatDate(item.deadline_date)}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.reminderButton}>
+                <PrimaryButton 
+                  title="Got it!" 
+                  onPress={() => setShowReminder(false)} 
+                />
+              </View>
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </GradientShell>
   );
 }
@@ -223,4 +362,16 @@ const styles = StyleSheet.create({
   itemSub: { color: '#9EB2D3', marginTop: 2, fontSize: 12 },
   itemTime: { color: '#4C86FF', fontWeight: '800', fontSize: 13 },
   empty: { color: '#A6B7D7', fontSize: 13, paddingVertical: 10 },
+  reminderBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  reminderCard: { backgroundColor: colors.surface, borderRadius: 24, padding: 24, maxWidth: 400, width: '100%', maxHeight: '80%' },
+  reminderHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+  reminderIcon: { width: 48, height: 48, borderRadius: 14, backgroundColor: 'rgba(245, 158, 11, 0.1)', alignItems: 'center', justifyContent: 'center' },
+  reminderTitle: { color: '#fff', fontSize: 22, fontWeight: '900' },
+  reminderSection: { marginBottom: 20 },
+  reminderSectionTitle: { color: colors.muted, fontSize: 12, fontWeight: '800', textTransform: 'uppercase', marginBottom: 10, letterSpacing: 0.5 },
+  reminderItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)', marginBottom: 8 },
+  reminderItemIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(61, 124, 255, 0.1)', alignItems: 'center', justifyContent: 'center' },
+  reminderItemTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
+  reminderItemMeta: { color: colors.muted, fontSize: 12, marginTop: 2 },
+  reminderButton: { marginTop: 10 },
 });

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
 import { colors } from '../src/theme';
 import { ScreenShell } from '../src/screen-shell';
@@ -113,44 +114,49 @@ export default function CoursesScreen() {
         onEndReached={() => { if (hasMore && !loading && !refreshing) load(page + 1, true); }}
         onEndReachedThreshold={0.6}
         renderItem={({ item }) => (
-          <GlassCard style={styles.card}>
-            <View style={styles.cardHeader}>
-              <View style={styles.codeBadge}>
-                <Text style={styles.codeText}>{item.course_code ?? item.courseCode}</Text>
+          <Pressable 
+            onPress={() => router.push({ pathname: '/details', params: { type: 'course', id: item.id } })}
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+          >
+            <GlassCard style={styles.card}>
+              <View style={styles.cardHeader}>
+                <View style={styles.codeBadge}>
+                  <Text style={styles.codeText}>{item.course_code ?? item.courseCode}</Text>
+                </View>
+                <View style={styles.dayBadge}>
+                  <Text style={styles.dayText}>{item.day_of_week ?? item.dayOfWeek ?? 'TBD'}</Text>
+                </View>
               </View>
-              <View style={styles.dayBadge}>
-                <Text style={styles.dayText}>{item.day_of_week ?? item.dayOfWeek ?? 'TBD'}</Text>
+              
+              <View style={styles.cardContent}>
+                <Text style={styles.name}>{item.course_title ?? item.courseTitle}</Text>
+                <View style={styles.infoRow}>
+                  <Ionicons name="person-outline" size={14} color={colors.muted} />
+                  <Text style={styles.sub}>{item.lecturer_name ?? item.lecturerName ?? 'No Lecturer'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text style={styles.meta}>{item.venue ?? 'No Venue'}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                  <Ionicons name="time-outline" size={14} color={colors.muted} />
+                  <Text style={styles.meta}>
+                    {item.start_time ?? 'TBD'} - {item.end_time ?? 'TBD'}
+                  </Text>
+                </View>
               </View>
-            </View>
-            
-            <View style={styles.cardContent}>
-              <Text style={styles.name}>{item.course_title ?? item.courseTitle}</Text>
-              <View style={styles.infoRow}>
-                <Ionicons name="person-outline" size={14} color={colors.muted} />
-                <Text style={styles.sub}>{item.lecturer_name ?? item.lecturerName ?? 'No Lecturer'}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Ionicons name="location-outline" size={14} color={colors.muted} />
-                <Text style={styles.meta}>{item.venue ?? 'No Venue'}</Text>
-              </View>
-              <View style={styles.infoRow}>
-                <Ionicons name="time-outline" size={14} color={colors.muted} />
-                <Text style={styles.meta}>
-                  {item.start_time ?? 'TBD'} - {item.end_time ?? 'TBD'}
-                </Text>
-              </View>
-            </View>
 
-            <View style={styles.actions}>
-              <Pressable onPress={() => openEdit(item)} style={styles.editBtn}>
-                <Ionicons name="pencil" size={16} color={colors.primary} />
-                <Text style={styles.editText}>Edit</Text>
-              </Pressable>
-              <Pressable onPress={() => remove(item)} style={styles.deleteBtn}>
-                <Ionicons name="trash-outline" size={16} color={colors.danger} />
-              </Pressable>
-            </View>
-          </GlassCard>
+              <View style={styles.actions}>
+                <Pressable onPress={(e) => { e.stopPropagation(); openEdit(item); }} style={styles.editBtn}>
+                  <Ionicons name="pencil" size={16} color={colors.primary} />
+                  <Text style={styles.editText}>Edit</Text>
+                </Pressable>
+                <Pressable onPress={(e) => { e.stopPropagation(); remove(item); }} style={styles.deleteBtn}>
+                  <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                </Pressable>
+              </View>
+            </GlassCard>
+          </Pressable>
         )}
       />
       <CrudModal 

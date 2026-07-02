@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
 import { ScreenShell } from '../src/screen-shell';
 import { CrudModal } from '../src/crud-modal';
@@ -107,7 +108,27 @@ export default function AttendanceScreen() {
       <View style={styles.header}><PrimaryButton title="New Record" icon="add" onPress={() => open()} /></View>
       <SortFilterBar sort={sort} setSort={setSort} order={order} setOrder={setOrder} filters={filters} setFilters={setFilters} />
       {loading ? <ActivityIndicator color="#fff" /> : null}
-      <FlatList data={items} keyExtractor={(i) => i.id} contentContainerStyle={styles.list} renderItem={({ item }) => <GlassCard style={styles.card}><Text style={styles.name}>{getCourseName(item.course_id)}</Text><Text style={styles.sub}>{item.classes_attended}/{item.classes_held} classes</Text><Text style={styles.percent}>{item.attendance_percentage ?? 0}%</Text><View style={styles.actions}><Pressable onPress={() => open(item)}><Text style={styles.action}>Edit</Text></Pressable><Pressable onPress={async () => { await deleteItem(`/attendance/${item.id}`); await refresh(); }}><Text style={[styles.action, styles.danger]}>Delete</Text></Pressable></View></GlassCard>} />
+      <FlatList 
+        data={items} 
+        keyExtractor={(i) => i.id} 
+        contentContainerStyle={styles.list} 
+        renderItem={({ item }) => (
+          <Pressable 
+            onPress={() => router.push({ pathname: '/details', params: { type: 'attendance', id: item.id } })}
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+          >
+            <GlassCard style={styles.card}>
+              <Text style={styles.name}>{getCourseName(item.course_id)}</Text>
+              <Text style={styles.sub}>{item.classes_attended}/{item.classes_held} classes</Text>
+              <Text style={styles.percent}>{item.attendance_percentage ?? 0}%</Text>
+              <View style={styles.actions}>
+                <Pressable onPress={(e) => { e.stopPropagation(); open(item); }}><Text style={styles.action}>Edit</Text></Pressable>
+                <Pressable onPress={async (e) => { e.stopPropagation(); await deleteItem(`/attendance/${item.id}`); await refresh(); }}><Text style={[styles.action, styles.danger]}>Delete</Text></Pressable>
+              </View>
+            </GlassCard>
+          </Pressable>
+        )} 
+      />
       <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Attendance' : 'New Attendance'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
     </GradientShell>
     </ScreenShell>

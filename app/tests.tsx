@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
 import { colors } from '../src/theme';
 import { ScreenShell } from '../src/screen-shell';
@@ -9,6 +10,7 @@ import { apiGetWithQuery } from '../src/api';
 import { createItem, deleteItem, updateItem } from '../src/api-hooks';
 import { showError } from '../src/toast';
 import { SortFilterBar } from '../src/filters';
+import { formatDate } from '../src/utils/date-utils';
 
 export default function TestsScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -71,27 +73,32 @@ export default function TestsScreen() {
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(1, false)} tintColor="#fff" />}
           ListEmptyComponent={<Text style={styles.empty}>No assessments found.</Text>}
           renderItem={({ item }) => (
-            <GlassCard style={styles.card}>
-              <View style={styles.cardTop}>
-                <View style={styles.testIcon}>
-                  <Ionicons name="flask" size={20} color={colors.warning} />
+            <Pressable 
+              onPress={() => router.push({ pathname: '/details', params: { type: 'test', id: item.id } })}
+              style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+            >
+              <GlassCard style={styles.card}>
+                <View style={styles.cardTop}>
+                  <View style={styles.testIcon}>
+                    <Ionicons name="flask" size={20} color={colors.warning} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.name}>{item.title}</Text>
+                    <Text style={styles.sub}>{formatDate(item.date)} {item.time ? `• ${item.time}` : ''}</Text>
+                  </View>
                 </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.name}>{item.title}</Text>
-                  <Text style={styles.sub}>{item.date} • {item.time ?? 'TBD'}</Text>
+                
+                <View style={styles.infoRow}>
+                  <Ionicons name="location-outline" size={14} color={colors.muted} />
+                  <Text style={styles.infoText}>{item.venue || 'TBD'}</Text>
                 </View>
-              </View>
-              
-              <View style={styles.infoRow}>
-                <Ionicons name="location-outline" size={14} color={colors.muted} />
-                <Text style={styles.infoText}>{item.venue || 'TBD'}</Text>
-              </View>
 
-              <View style={styles.actions}>
-                <Pressable onPress={() => openEdit(item)} style={styles.actionBtn}><Ionicons name="pencil" size={18} color={colors.primary} /></Pressable>
-                <Pressable onPress={() => remove(item)} style={styles.actionBtn}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
-              </View>
-            </GlassCard>
+                <View style={styles.actions}>
+                  <Pressable onPress={(e) => { e.stopPropagation(); openEdit(item); }} style={styles.actionBtn}><Ionicons name="pencil" size={18} color={colors.primary} /></Pressable>
+                  <Pressable onPress={(e) => { e.stopPropagation(); remove(item); }} style={styles.actionBtn}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+                </View>
+              </GlassCard>
+            </Pressable>
           )}
         />
       )}

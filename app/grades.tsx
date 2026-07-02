@@ -222,38 +222,43 @@ export default function GradesScreen() {
           renderItem={({ item }) => {
             const gradeColor = getGradeColor(parseFloat(item.grade_point) || 0);
             return (
-              <GlassCard style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.gradeBadge, { backgroundColor: gradeColor + '20' }]}>
-                    <Text style={[styles.gradeText, { color: gradeColor }]}>
-                      {parseFloat(item.grade_point).toFixed(2)}
-                    </Text>
-                  </View>
-                  <View style={styles.semesterBadge}>
-                    <Text style={styles.semesterText}>{item.semester}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.cardContent}>
-                  <Text style={styles.courseName}>{getCourseName(item.course_id)}</Text>
-                  <View style={styles.detailsRow}>
-                    <View style={styles.detailItem}>
-                      <Ionicons name="library-outline" size={14} color={colors.muted} />
-                      <Text style={styles.detailText}>{item.credit_units} Credits</Text>
+              <Pressable 
+                onPress={() => router.push({ pathname: '/details', params: { type: 'grade', id: item.id } })}
+                style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+              >
+                <GlassCard style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={[styles.gradeBadge, { backgroundColor: gradeColor + '20' }]}>
+                      <Text style={[styles.gradeText, { color: gradeColor }]}>
+                        {parseFloat(item.grade_point).toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.semesterBadge}>
+                      <Text style={styles.semesterText}>{item.semester}</Text>
                     </View>
                   </View>
-                </View>
 
-                <View style={styles.actions}>
-                  <Pressable onPress={() => openEdit(item)} style={styles.editBtn}>
-                    <Ionicons name="pencil" size={16} color={colors.primary} />
-                    <Text style={styles.editText}>Edit</Text>
-                  </Pressable>
-                  <Pressable onPress={() => remove(item)} style={styles.deleteBtn}>
-                    <Ionicons name="trash-outline" size={16} color={colors.danger} />
-                  </Pressable>
-                </View>
-              </GlassCard>
+                  <View style={styles.cardContent}>
+                    <Text style={styles.courseName}>{getCourseName(item.course_id)}</Text>
+                    <View style={styles.detailsRow}>
+                      <View style={styles.detailItem}>
+                        <Ionicons name="library-outline" size={14} color={colors.muted} />
+                        <Text style={styles.detailText}>{item.credit_units} Credits</Text>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View style={styles.actions}>
+                    <Pressable onPress={(e) => { e.stopPropagation(); openEdit(item); }} style={styles.editBtn}>
+                      <Ionicons name="pencil" size={16} color={colors.primary} />
+                      <Text style={styles.editText}>Edit</Text>
+                    </Pressable>
+                    <Pressable onPress={(e) => { e.stopPropagation(); remove(item); }} style={styles.deleteBtn}>
+                      <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                    </Pressable>
+                  </View>
+                </GlassCard>
+              </Pressable>
             );
           }}
         />

@@ -43,11 +43,25 @@ export default function Calendar() {
       if (!day) return;
       map.set(day, [...(map.get(day) ?? []), item]);
     };
-    (events?.courses ?? []).forEach((item: any) => add(String(item.day_of_week ?? item.dayOfWeek ?? ''), { type: 'class', title: item.course_title ?? item.courseTitle, meta: item.start_time ?? item.startTime }));
-    (events?.assignments ?? []).forEach((item: any) => add(String(item.deadline_date ?? item.deadlineDate ?? ''), { type: 'assignment', title: item.title, meta: item.status ?? 'pending' }));
-    (events?.tests ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'test', title: item.title, meta: item.time ?? 'TBD' }));
-    (events?.exams ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'exam', title: item.title, meta: item.time ?? 'TBD' }));
-    (events?.sessions ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'study', title: item.subject, meta: item.start_time ?? '' }));
+    
+    // Add courses with recurring support
+    (events?.courses ?? []).forEach((item: any) => {
+      const dayOfWeek = String(item.day_of_week ?? item.dayOfWeek ?? '');
+      if (dayOfWeek) {
+        add(dayOfWeek, { 
+          type: 'class', 
+          title: item.course_title ?? item.courseTitle, 
+          meta: `${item.start_time ?? item.startTime ?? 'TBD'} - ${item.end_time ?? item.endTime ?? 'TBD'}`,
+          id: item.id,
+          day_of_week: dayOfWeek 
+        });
+      }
+    });
+    
+    (events?.assignments ?? []).forEach((item: any) => add(String(item.deadline_date ?? item.deadlineDate ?? ''), { type: 'assignment', title: item.title, meta: item.status ?? 'pending', id: item.id }));
+    (events?.tests ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'test', title: item.title, meta: item.time ?? 'TBD', id: item.id }));
+    (events?.exams ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'exam', title: item.title, meta: item.time ?? 'TBD', id: item.id }));
+    (events?.sessions ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'study', title: item.subject, meta: item.start_time ?? '', id: item.id }));
     return map;
   }, [events]);
 
@@ -132,17 +146,29 @@ export default function Calendar() {
 
         <GlassCard style={styles.detailCard}>
           <Text style={styles.sectionTitle}>Events for {selectedDay ? `${monthLabel} ${selectedDay}` : 'Selected Day'}</Text>
-          {selectedEvents.length > 0 ? selectedEvents.map((item, idx) => (
-            <View key={idx} style={styles.detailRow}>
-              <View style={[styles.typePill, { backgroundColor: getDotColorHex(item.type) + '20' }]}>
-                <Text style={[styles.typeText, { color: getDotColorHex(item.type) }]}>{item.type}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.detailTitle}>{item.title}</Text>
-                <Text style={styles.detailMeta}>{item.meta}</Text>
-              </View>
-            </View>
-          )) : (
+          {selectedEvents.length > 0 ? selectedEvents.map((item, idx) => {
+            const itemData = item as any;
+            return (
+              <Pressable 
+                key={idx} 
+                style={styles.detailRow}
+                onPress={() => {
+                  if (itemData.id) {
+                    router.push({ pathname: '/details', params: { type: item.type === 'class' ? 'course' : item.type === 'study' ? 'study' : item.type, id: itemData.id } });
+                  }
+                }}
+              >
+                <View style={[styles.typePill, { backgroundColor: getDotColorHex(item.type) + '20' }]}>
+                  <Text style={[styles.typeText, { color: getDotColorHex(item.type) }]}>{item.type}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.detailTitle}>{item.title}</Text>
+                  <Text style={styles.detailMeta}>{item.meta}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+              </Pressable>
+            );
+          }) : (
             <Text style={styles.detailText}>No events scheduled for this day.</Text>
           )}
           <PrimaryButton title="Refresh Agenda" variant="ghost" onPress={() => apiGet('/calendar/agenda').then(setEvents).catch((error) => showError(error.message))} />

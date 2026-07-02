@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
 import { colors } from '../src/theme';
 import { ScreenShell } from '../src/screen-shell';
@@ -10,6 +11,7 @@ import { createItem, deleteItem, updateItem } from '../src/api-hooks';
 import { showError } from '../src/toast';
 import { pickAttachment, pickImage, uploadToSupabase } from '../src/storage';
 import { SortFilterBar } from '../src/filters';
+import { formatDate } from '../src/utils/date-utils';
 
 export default function NotesScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -139,33 +141,38 @@ export default function NotesScreen() {
         onEndReached={() => { if (hasMore && !loading && !refreshing && !query.trim()) load(page + 1, true); }}
         onEndReachedThreshold={0.6}
         renderItem={({ item }) => (
-          <GlassCard style={styles.card}>
-            <View style={styles.cardTop}>
-              <Text style={styles.name} numberOfLines={1}>{item.title}</Text>
-              <View style={styles.cardActions}>
-                <Pressable onPress={() => openEdit(item)}><Ionicons name="pencil" size={18} color={colors.primary} /></Pressable>
-                <Pressable onPress={async () => { await remove(item); }}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
-              </View>
-            </View>
-            
-            <Text style={styles.sub} numberOfLines={2}>{item.summary || item.content}</Text>
-            
-            <View style={styles.footerRow}>
-              <View style={styles.dateBadge}>
-                <Ionicons name="calendar-outline" size={12} color={colors.muted} />
-                <Text style={styles.meta}>{new Date(item.created_at ?? item.createdAt ?? Date.now()).toLocaleDateString()}</Text>
+          <Pressable 
+            onPress={() => router.push({ pathname: '/details', params: { type: 'note', id: item.id } })}
+            style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+          >
+            <GlassCard style={styles.card}>
+              <View style={styles.cardTop}>
+                <Text style={styles.name} numberOfLines={1}>{item.title}</Text>
+                <View style={styles.cardActions}>
+                  <Pressable onPress={(e) => { e.stopPropagation(); openEdit(item); }}><Ionicons name="pencil" size={18} color={colors.primary} /></Pressable>
+                  <Pressable onPress={async (e) => { e.stopPropagation(); await remove(item); }}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+                </View>
               </View>
               
-              <View style={styles.attachRow}>
-                {(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length > 0 && (
-                  <View style={styles.attachCount}>
-                    <Ionicons name="attach-outline" size={14} color={colors.success} />
-                    <Text style={styles.attachCountText}>{(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length}</Text>
-                  </View>
-                )}
+              <Text style={styles.sub} numberOfLines={2}>{item.summary || item.content}</Text>
+              
+              <View style={styles.footerRow}>
+                <View style={styles.dateBadge}>
+                  <Ionicons name="calendar-outline" size={12} color={colors.muted} />
+                  <Text style={styles.meta}>{formatDate(item.created_at ?? item.createdAt)}</Text>
+                </View>
+                
+                <View style={styles.attachRow}>
+                  {(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length > 0 && (
+                    <View style={styles.attachCount}>
+                      <Ionicons name="attach-outline" size={14} color={colors.success} />
+                      <Text style={styles.attachCountText}>{(Array.isArray(item.attachments) ? item.attachments : String(item.attachments ?? '').split(',').map((v) => v.trim()).filter(Boolean)).length}</Text>
+                    </View>
+                  )}
+                </View>
               </View>
-            </View>
-          </GlassCard>
+            </GlassCard>
+          </Pressable>
         )}
       />
 

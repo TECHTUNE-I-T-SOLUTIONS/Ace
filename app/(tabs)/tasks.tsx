@@ -1,12 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GlassCard, GradientShell, PrimaryButton } from '../../src/components';
 import { colors } from '../../src/theme';
 import { CrudModal } from '../../src/crud-modal';
 import { apiGet, apiGetWithQuery } from '../../src/api';
 import { createItem, deleteItem, updateItem } from '../../src/api-hooks';
 import { showError } from '../../src/toast';
+import { formatDate } from '../../src/utils/date-utils';
 
 export default function Tasks() {
   const [items, setItems] = useState<any[]>([]);
@@ -102,40 +104,46 @@ export default function Tasks() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#fff" />}
         ListEmptyComponent={<Text style={styles.empty}>No tasks found in this category.</Text>}
         renderItem={({ item }) => (
-          <GlassCard style={[styles.taskCard, item.status === 'done' && styles.taskCardDone]}>
-            <View style={styles.taskMain}>
-              <Pressable 
-                onPress={async () => {
-                  const nextStatus = item.status === 'done' ? 'todo' : 'done';
-                  await updateItem(`/tasks/${item.id}`, { status: nextStatus });
-                  await load(true);
-                }}
-                style={[styles.checkbox, item.status === 'done' && styles.checkboxDone]}
-              >
-                {item.status === 'done' ? <Ionicons name="checkmark" color="#fff" size={14} /> : null}
-              </Pressable>
-              
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.taskTitle, item.status === 'done' && styles.done]}>{item.title}</Text>
-                {item.description ? <Text style={styles.taskSub} numberOfLines={2}>{item.description}</Text> : null}
+          <Pressable 
+            onPress={() => router.push({ pathname: '/details', params: { type: 'task', id: item.id } })}
+            style={({ pressed }) => [styles.taskCard, item.status === 'done' && styles.taskCardDone, pressed && { opacity: 0.8 }]}
+          >
+            <GlassCard style={[styles.taskCard, item.status === 'done' && styles.taskCardDone]}>
+              <View style={styles.taskMain}>
+                <Pressable 
+                  onPress={async (e) => {
+                    e.stopPropagation();
+                    const nextStatus = item.status === 'done' ? 'todo' : 'done';
+                    await updateItem(`/tasks/${item.id}`, { status: nextStatus });
+                    await load(true);
+                  }}
+                  style={[styles.checkbox, item.status === 'done' && styles.checkboxDone]}
+                >
+                  {item.status === 'done' ? <Ionicons name="checkmark" color="#fff" size={14} /> : null}
+                </Pressable>
                 
-                <View style={styles.taskMetaRow}>
-                  <View style={[styles.priorityTag, getPriorityStyle(item.priority)]}>
-                    <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>{item.priority}</Text>
-                  </View>
-                  <View style={styles.metaBadge}>
-                    <Ionicons name="calendar-outline" size={12} color={colors.muted} />
-                    <Text style={styles.metaText}>{item.due || 'No date'}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.taskTitle, item.status === 'done' && styles.done]}>{item.title}</Text>
+                  {item.description ? <Text style={styles.taskSub} numberOfLines={2}>{item.description}</Text> : null}
+                  
+                  <View style={styles.taskMetaRow}>
+                    <View style={[styles.priorityTag, getPriorityStyle(item.priority)]}>
+                      <Text style={[styles.priorityText, { color: getPriorityColor(item.priority) }]}>{item.priority}</Text>
+                    </View>
+                    <View style={styles.metaBadge}>
+                      <Ionicons name="calendar-outline" size={12} color={colors.muted} />
+                      <Text style={styles.metaText}>{formatDate(item.due)}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
 
-              <View style={styles.taskActions}>
-                <Pressable onPress={() => open(item)} style={styles.actionIcon}><Ionicons name="pencil-outline" size={18} color={colors.primary} /></Pressable>
-                <Pressable onPress={() => remove(item)} style={styles.actionIcon}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+                <View style={styles.taskActions}>
+                  <Pressable onPress={(e) => { e.stopPropagation(); open(item); }} style={styles.actionIcon}><Ionicons name="pencil-outline" size={18} color={colors.primary} /></Pressable>
+                  <Pressable onPress={(e) => { e.stopPropagation(); remove(item); }} style={styles.actionIcon}><Ionicons name="trash-outline" size={18} color={colors.danger} /></Pressable>
+                </View>
               </View>
-            </View>
-          </GlassCard>
+            </GlassCard>
+          </Pressable>
         )}
       />
       

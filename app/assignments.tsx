@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
 import { colors } from '../src/theme';
 import { ScreenShell } from '../src/screen-shell';
@@ -9,6 +10,7 @@ import { apiGetWithQuery } from '../src/api';
 import { createItem, deleteItem, updateItem } from '../src/api-hooks';
 import { showError } from '../src/toast';
 import { SortFilterBar } from '../src/filters';
+import { formatDate } from '../src/utils/date-utils';
 
 export default function AssignmentsScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -115,35 +117,40 @@ export default function AssignmentsScreen() {
         renderItem={({ item }) => {
           const pStyle = getPriorityStyle(item.priority);
           return (
-            <GlassCard style={styles.card}>
-              <View style={styles.cardHeader}>
-                <View style={[styles.priorityBadge, { backgroundColor: pStyle.bg }]}>
-                  <Text style={[styles.priorityText, { color: pStyle.color }]}>{item.priority?.toUpperCase() ?? 'MEDIUM'}</Text>
+            <Pressable 
+              onPress={() => router.push({ pathname: '/details', params: { type: 'assignment', id: item.id } })}
+              style={({ pressed }) => [styles.card, pressed && { opacity: 0.8 }]}
+            >
+              <GlassCard style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.priorityBadge, { backgroundColor: pStyle.bg }]}>
+                    <Text style={[styles.priorityText, { color: pStyle.color }]}>{item.priority?.toUpperCase() ?? 'MEDIUM'}</Text>
+                  </View>
+                  <View style={styles.statusBadge}>
+                    <Text style={styles.statusText}>{item.status === 'pending' ? 'Pending' : item.status === 'completed' ? 'Completed' : 'Pending'}</Text>
+                  </View>
                 </View>
-                <View style={styles.statusBadge}>
-                  <Text style={styles.statusText}>{item.status === 'pending' ? 'Pending' : item.status === 'completed' ? 'Completed' : 'Pending'}</Text>
-                </View>
-              </View>
 
-              <View style={styles.cardContent}>
-                <Text style={styles.name}>{item.title}</Text>
-                {item.description ? <Text style={styles.desc} numberOfLines={2}>{item.description}</Text> : null}
-                <View style={styles.dueDateRow}>
-                  <Ionicons name="calendar-outline" size={14} color={colors.muted} />
-                  <Text style={styles.sub}>Due: {item.deadline_date ?? 'TBD'} at {item.deadline_time ?? '00:00'}</Text>
+                <View style={styles.cardContent}>
+                  <Text style={styles.name}>{item.title}</Text>
+                  {item.description ? <Text style={styles.desc} numberOfLines={2}>{item.description}</Text> : null}
+                  <View style={styles.dueDateRow}>
+                    <Ionicons name="calendar-outline" size={14} color={colors.muted} />
+                    <Text style={styles.sub}>Due: {formatDate(item.deadline_date)}</Text>
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.actions}>
-                <Pressable onPress={() => openEdit(item)} style={styles.editBtn}>
-                  <Ionicons name="pencil" size={16} color={colors.primary} />
-                  <Text style={styles.editText}>Edit</Text>
-                </Pressable>
-                <Pressable onPress={() => remove(item)} style={styles.deleteBtn}>
-                  <Ionicons name="trash-outline" size={16} color={colors.danger} />
-                </Pressable>
-              </View>
-            </GlassCard>
+                <View style={styles.actions}>
+                  <Pressable onPress={(e) => { e.stopPropagation(); openEdit(item); }} style={styles.editBtn}>
+                    <Ionicons name="pencil" size={16} color={colors.primary} />
+                    <Text style={styles.editText}>Edit</Text>
+                  </Pressable>
+                  <Pressable onPress={(e) => { e.stopPropagation(); remove(item); }} style={styles.deleteBtn}>
+                    <Ionicons name="trash-outline" size={16} color={colors.danger} />
+                  </Pressable>
+                </View>
+              </GlassCard>
+            </Pressable>
           );
         }}
       />

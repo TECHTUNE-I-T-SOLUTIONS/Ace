@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../../src/components';
 import { colors } from '../../src/theme';
-import { apiGet } from '../../src/api';
-import { showError } from '../../src/toast';
+import { apiGet, apiJson } from '../../src/api';
+import { showError, showSuccess } from '../../src/toast';
 import { pickImage, storagePath, uploadToSupabase } from '../../src/storage';
 import { supabase } from '../../src/lib/supabase';
 
@@ -12,6 +13,16 @@ export default function Profile() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    full_name: '',
+    institution: '',
+    faculty: '',
+    department: '',
+    level: '',
+    student_id: '',
+  });
 
   useEffect(() => {
     apiGet<any>('/users/me')
@@ -38,6 +49,34 @@ export default function Profile() {
       showError(error.message ?? 'Avatar upload failed');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const openEdit = () => {
+    setForm({
+      full_name: profile?.full_name ?? '',
+      institution: profile?.institution ?? '',
+      faculty: profile?.faculty ?? '',
+      department: profile?.department ?? '',
+      level: profile?.level ?? '',
+      student_id: profile?.student_id ?? '',
+    });
+    setEditing(true);
+  };
+
+  const saveProfile = async () => {
+    try {
+      setSaving(true);
+      await apiJson('/users/me', 'PATCH', form);
+      showSuccess('Profile updated successfully');
+      setEditing(false);
+      // Reload profile
+      const updated = await apiGet<any>('/users/me');
+      setProfile(updated);
+    } catch (error: any) {
+      showError(error.message ?? 'Failed to update profile');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -115,8 +154,104 @@ export default function Profile() {
           </View>
         </GlassCard>
 
-        <PrimaryButton title="Edit Profile Details" variant="ghost" icon="create-outline" />
+        <PrimaryButton title="Edit Profile Details" variant="ghost" icon="create-outline" onPress={openEdit} />
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={editing} animationType="slide" onRequestClose={() => setEditing(false)}>
+        <GradientShell>
+          <ScrollView contentContainerStyle={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <Pressable onPress={() => setEditing(false)} style={styles.modalClose}>
+                <Ionicons name="close" size={24} color="#fff" />
+              </Pressable>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Full Name</Text>
+              <TextInput
+                value={form.full_name}
+                onChangeText={(text) => setForm((current) => ({ ...current, full_name: text }))}
+                placeholder="Enter your full name"
+                placeholderTextColor="#7E92B9"
+                style={styles.formInput}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Institution</Text>
+              <TextInput
+                value={form.institution}
+                onChangeText={(text) => setForm((current) => ({ ...current, institution: text }))}
+                placeholder="University/College name"
+                placeholderTextColor="#7E92B9"
+                style={styles.formInput}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Faculty</Text>
+              <TextInput
+                value={form.faculty}
+                onChangeText={(text) => setForm((current) => ({ ...current, faculty: text }))}
+                placeholder="Faculty name"
+                placeholderTextColor="#7E92B9"
+                style={styles.formInput}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Department</Text>
+              <TextInput
+                value={form.department}
+                onChangeText={(text) => setForm((current) => ({ ...current, department: text }))}
+                placeholder="Department name"
+                placeholderTextColor="#7E92B9"
+                style={styles.formInput}
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Level</Text>
+              <View style={styles.levelSelector}>
+                {['100', '200', '300', '400', '500'].map((level) => (
+                  <Pressable
+                    key={level}
+                    onPress={() => setForm((current) => ({ ...current, level }))}
+                    style={[styles.levelOption, form.level === level && styles.levelOptionActive]}
+                  >
+                    <Text style={[styles.levelOptionText, form.level === level && styles.levelOptionTextActive]}>{level}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Student ID</Text>
+              <TextInput
+                value={form.student_id}
+                onChangeText={(text) => setForm((current) => ({ ...current, student_id: text }))}
+                placeholder="Enter student ID"
+                placeholderTextColor="#7E92B9"
+                style={styles.formInput}
+              />
+            </View>
+
+            <View style={styles.modalActions}>
+              <View style={styles.saveButton}>
+                <PrimaryButton
+                  title={saving ? 'Saving...' : 'Save Changes'}
+                  onPress={saveProfile}
+                />
+              </View>
+              <Pressable onPress={() => setEditing(false)} style={styles.cancelButton}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </GradientShell>
+      </Modal>
     </GradientShell>
   );
 }
@@ -195,4 +330,20 @@ const styles = StyleSheet.create({
   fieldIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center' },
   fieldLabel: { color: colors.muted, fontSize: 11, fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
   fieldValue: { color: '#fff', fontSize: 15, fontWeight: '600' },
+  modalContent: { padding: 20, gap: 20 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  modalTitle: { color: '#fff', fontSize: 24, fontWeight: '900' },
+  modalClose: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
+  formGroup: { gap: 8 },
+  formLabel: { color: '#B7C7E7', fontSize: 13, fontWeight: '800', textTransform: 'uppercase' },
+  formInput: { backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: 14, color: '#fff', fontSize: 15, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  levelSelector: { flexDirection: 'row', gap: 8 },
+  levelOption: { flex: 1, padding: 14, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  levelOptionActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  levelOptionText: { color: '#B7C7E7', fontWeight: '800', fontSize: 14 },
+  levelOptionTextActive: { color: '#fff' },
+  modalActions: { gap: 12, marginTop: 10 },
+  saveButton: { paddingVertical: 16 },
+  cancelButton: { padding: 16, alignItems: 'center' },
+  cancelButtonText: { color: colors.muted, fontSize: 15, fontWeight: '700' },
 });
