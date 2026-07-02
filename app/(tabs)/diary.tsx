@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { GlassCard, GradientShell } from '../../src/components';
 import { colors } from '../../src/theme';
 import { CrudModal } from '../../src/crud-modal';
@@ -91,7 +92,10 @@ export default function Diary() {
                 <Ionicons name="document-outline" size={12} color={colors.muted} />
                 <Text style={styles.entryWords}>{entry.word_count ?? entry.wordCount ?? 0} words</Text>
               </View>
-              <Pressable style={styles.readMoreBtn}>
+              <Pressable 
+                style={styles.readMoreBtn}
+                onPress={() => router.push({ pathname: '/diary-details', params: { id: entry.id } })}
+              >
                 <Text style={styles.readMore}>Read details</Text>
                 <Ionicons name="arrow-forward" size={14} color={colors.primary} />
               </Pressable>

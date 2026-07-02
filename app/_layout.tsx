@@ -22,6 +22,8 @@ export default function RootLayout() {
             <Stack.Screen name="tests" />
             <Stack.Screen name="exams" />
             <Stack.Screen name="analytics" />
+            <Stack.Screen name="diary-details" />
+            <Stack.Screen name="edit" />
           </Stack>
           <Toast />
         </View>

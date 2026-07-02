@@ -3,14 +3,14 @@
     "name": "ACE",
     "slug": "ace",
     "scheme": "ace",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/icons/app-icon-1024.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/icons/app-icon-1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#C4CAD1"
+      "backgroundColor": "#0A2342"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,8 +21,8 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#7790D4",
-          "image": "./assets/logo.png",
+          "backgroundColor": "#0A2342",
+          "image": "./assets/icons/app-icon-1024.png",
           "imageWidth": 76
         }
       ],
@@ -30,7 +30,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/logo.png",
+          "icon": "./assets/icons/notification-icon.png",
           "color": "#214FCE",
           "sounds": [
             "./assets/notifications.wav"
@@ -49,9 +49,9 @@
     },
     "android": {
       "package": "com.ace.mobile",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/icons/adaptive-foreground.png",
         "backgroundColor": "#0A2342"
       },
       "edgeToEdgeEnabled": true,
@@ -74,10 +74,10 @@
       }
     },
     "owner": "princetechtune",
-    "runtimeVersion": "1.0.1"
-  },
-  "updates": {
-    "url": "https://u.expo.dev/82fc60f5-f42e-4407-9e3b-4f2f67a45c96",
-    "fallbackToCacheTimeout": 30000
+    "runtimeVersion": "1.0.2",
+    "updates": {
+      "url": "https://u.expo.dev/82fc60f5-f42e-4407-9e3b-4f2f67a45c96",
+      "fallbackToCacheTimeout": 30000
+    }
   }
 }

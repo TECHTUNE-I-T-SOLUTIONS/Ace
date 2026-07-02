@@ -1,13 +1,12 @@
 {
   "name": "ace",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "lint": "eslint .",
     "supabase:init": "npx supabase init",
     "supabase:login": "npx supabase login",
@@ -51,6 +50,7 @@
   "devDependencies": {
     "@types/react": "~19.1.10",
     "babel-preset-expo": "54.0.10",
+    "sharp": "^0.35.3",
     "typescript": "5.9.2"
   }
 }

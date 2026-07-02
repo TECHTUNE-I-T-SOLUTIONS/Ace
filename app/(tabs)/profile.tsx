@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -8,8 +8,10 @@ import { apiGet, apiJson } from '../../src/api';
 import { showError, showSuccess } from '../../src/toast';
 import { pickImage, storagePath, uploadToSupabase } from '../../src/storage';
 import { supabase } from '../../src/lib/supabase';
+import { getActiveSchool } from '../../src/schools';
 
 export default function Profile() {
+  const school = getActiveSchool();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -23,6 +25,12 @@ export default function Profile() {
     level: '',
     student_id: '',
   });
+  const [showFacultyPicker, setShowFacultyPicker] = useState(false);
+  const [showDepartmentPicker, setShowDepartmentPicker] = useState(false);
+
+  const facultyOptions = school.faculties;
+  const selectedFaculty = useMemo(() => facultyOptions.find((item) => item.name === form.faculty) ?? null, [form.faculty, facultyOptions]);
+  const departmentOptions = selectedFaculty?.departments ?? [];
 
   useEffect(() => {
     apiGet<any>('/users/me')
@@ -55,7 +63,7 @@ export default function Profile() {
   const openEdit = () => {
     setForm({
       full_name: profile?.full_name ?? '',
-      institution: profile?.institution ?? '',
+      institution: profile?.institution ?? school.name,
       faculty: profile?.faculty ?? '',
       department: profile?.department ?? '',
       level: profile?.level ?? '',
@@ -181,35 +189,29 @@ export default function Profile() {
 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Institution</Text>
-              <TextInput
-                value={form.institution}
-                onChangeText={(text) => setForm((current) => ({ ...current, institution: text }))}
-                placeholder="University/College name"
-                placeholderTextColor="#7E92B9"
-                style={styles.formInput}
-              />
+              <Pressable onPress={() => setForm((current) => ({ ...current, institution: school.name }))} style={styles.selector}>
+                <Text style={styles.selectorText}>{form.institution || school.name}</Text>
+                <Text style={styles.selectorCaret}>⌄</Text>
+              </Pressable>
             </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Faculty</Text>
-              <TextInput
-                value={form.faculty}
-                onChangeText={(text) => setForm((current) => ({ ...current, faculty: text }))}
-                placeholder="Faculty name"
-                placeholderTextColor="#7E92B9"
-                style={styles.formInput}
-              />
+              <Pressable onPress={() => setShowFacultyPicker(true)} style={styles.selector}>
+                <Text style={styles.selectorText}>{form.faculty || 'Select faculty'}</Text>
+                <Text style={styles.selectorCaret}>⌄</Text>
+              </Pressable>
             </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.formLabel}>Department</Text>
-              <TextInput
-                value={form.department}
-                onChangeText={(text) => setForm((current) => ({ ...current, department: text }))}
-                placeholder="Department name"
-                placeholderTextColor="#7E92B9"
-                style={styles.formInput}
-              />
+              <Pressable 
+                onPress={() => (selectedFaculty ? setShowDepartmentPicker(true) : showError('Choose a faculty first'))} 
+                style={styles.selector}
+              >
+                <Text style={styles.selectorText}>{form.department || 'Select department'}</Text>
+                <Text style={styles.selectorCaret}>⌄</Text>
+              </Pressable>
             </View>
 
             <View style={styles.formGroup}>
@@ -252,7 +254,53 @@ export default function Profile() {
           </ScrollView>
         </GradientShell>
       </Modal>
+
+      <PickerModal
+        visible={showFacultyPicker}
+        title="Select Faculty"
+        options={facultyOptions.map((item) => item.name)}
+        onClose={() => setShowFacultyPicker(false)}
+        onSelect={(value) => {
+          setForm((current) => ({ ...current, faculty: value, department: '' }));
+          setShowFacultyPicker(false);
+        }}
+      />
+
+      <PickerModal
+        visible={showDepartmentPicker}
+        title="Select Department"
+        options={departmentOptions.map((item) => item.name)}
+        onClose={() => setShowDepartmentPicker(false)}
+        onSelect={(value) => {
+          setForm((current) => ({ ...current, department: value }));
+          setShowDepartmentPicker(false);
+        }}
+      />
     </GradientShell>
+  );
+}
+
+function PickerModal({ visible, title, options, onClose, onSelect }: { visible: boolean; title: string; options: string[]; onClose: () => void; onSelect: (value: string) => void }) {
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalCard}>
+          <View style={styles.pickerModalHeader}>
+            <Text style={styles.pickerModalTitle}>{title}</Text>
+            <Pressable onPress={onClose}>
+              <Text style={styles.closeText}>Close</Text>
+            </Pressable>
+          </View>
+          <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
+            {options.map((option) => (
+              <Pressable key={option} onPress={() => onSelect(option)} style={styles.optionRow}>
+                <Text style={styles.optionText}>{option}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -346,4 +394,24 @@ const styles = StyleSheet.create({
   saveButton: { paddingVertical: 16 },
   cancelButton: { padding: 16, alignItems: 'center' },
   cancelButtonText: { color: colors.muted, fontSize: 15, fontWeight: '700' },
+  selector: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    minHeight: 52,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+  },
+  selectorText: { color: '#fff', fontSize: 15 },
+  selectorCaret: { color: '#9CB0D0', fontSize: 18, fontWeight: '900' },
+  modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 16 },
+  modalCard: { backgroundColor: '#0E1830', borderRadius: 24, padding: 16, borderWidth: 1, borderColor: 'rgba(148,175,230,0.18)', gap: 12 },
+  pickerModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  pickerModalTitle: { color: '#fff', fontSize: 18, fontWeight: '900' },
+  closeText: { color: '#5D89FF', fontWeight: '800' },
+  optionRow: { paddingVertical: 12, borderTopWidth: 1, borderTopColor: 'rgba(148,175,230,0.12)' },
+  optionText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });
