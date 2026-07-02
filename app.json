@@ -74,11 +74,7 @@
       }
     },
     "owner": "princetechtune",
-    "runtimeVersion": {
-      "major": 1,
-      "minor": 0,
-      "patch": 1
-    }
+    "runtimeVersion": "1.0.1"
   },
   "updates": {
     "url": "https://u.expo.dev/82fc60f5-f42e-4407-9e3b-4f2f67a45c96",
