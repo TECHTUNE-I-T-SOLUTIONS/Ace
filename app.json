@@ -3,14 +3,14 @@
     "name": "ACE",
     "slug": "ace",
     "scheme": "ace",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/icons/app-icon-1024.png",
     "userInterfaceStyle": "dark",
     "splash": {
       "image": "./assets/icons/app-icon-1024.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0A2342"
+      "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,7 +21,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0A2342",
+          "backgroundColor": "#ffffff",
           "image": "./assets/icons/app-icon-1024.png",
           "imageWidth": 76
         }
@@ -52,7 +52,7 @@
       "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/adaptive-foreground.png",
-        "backgroundColor": "#0A2342"
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -74,7 +74,7 @@
       }
     },
     "owner": "princetechtune",
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": "1.0.3",
     "updates": {
       "url": "https://u.expo.dev/82fc60f5-f42e-4407-9e3b-4f2f67a45c96",
       "fallbackToCacheTimeout": 30000
