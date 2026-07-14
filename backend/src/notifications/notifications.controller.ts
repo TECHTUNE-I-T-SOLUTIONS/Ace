@@ -39,7 +39,7 @@ export class NotificationsController {
     );
     
     // Send a test notification to confirm the token is working
-    await this.service.sendTestNotification(req.user.sub, body.token);
+    // await this.service.sendTestNotification(req.user.sub, body.token);
     
     return { success: true, data: result };
   }
