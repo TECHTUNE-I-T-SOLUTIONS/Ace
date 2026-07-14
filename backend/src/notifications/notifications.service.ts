@@ -281,13 +281,17 @@ export class NotificationsService {
         .from('settings')
         .select('notifications_enabled')
         .eq('user_id', userId)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (settingsError) {
         this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
       }
 
-      if (!settings?.notifications_enabled) {
+      // If no settings record exists, assume notifications are enabled (default behavior)
+      const notificationsEnabled = settings?.notifications_enabled !== false;
+
+      if (!notificationsEnabled) {
         this.logger.log(`Notifications disabled for user ${userId}, skipping push notification`);
         return;
       }
@@ -347,13 +351,17 @@ export class NotificationsService {
         .from('settings')
         .select('notifications_enabled')
         .eq('user_id', userId)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (settingsError) {
         this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
       }
 
-      if (!settings?.notifications_enabled) {
+      // If no settings record exists, assume notifications are enabled (default behavior)
+      const notificationsEnabled = settings?.notifications_enabled !== false;
+
+      if (!notificationsEnabled) {
         this.logger.log(`Notifications disabled for user ${userId}, skipping login notification`);
         return;
       }
