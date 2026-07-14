@@ -26,6 +26,7 @@ export function CrudModal({
   onClose,
   onSubmit,
   totalSteps = 1,
+  customActions,
 }: {
   visible: boolean;
   title: string;
@@ -35,6 +36,7 @@ export function CrudModal({
   onClose: () => void;
   onSubmit: () => void;
   totalSteps?: number;
+  customActions?: React.ReactNode;
 }) {
   const [draft, setDraft] = useState(values);
   const [currentStep, setCurrentStep] = useState(1);
@@ -148,6 +150,8 @@ export function CrudModal({
             </View>
           </ScrollView>
 
+          {customActions && <View style={styles.customActions}>{customActions}</View>}
+
           <View style={styles.actions}>
             {currentStep > 1 ? (
               <PrimaryButton title="Back" variant="ghost" onPress={handleBack} />
@@ -254,6 +258,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   multiline: { minHeight: 120, paddingTop: 16, textAlignVertical: 'top' },
+  customActions: { gap: 12, marginBottom: 8 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
   selectInput: { 
     minHeight: 54, 

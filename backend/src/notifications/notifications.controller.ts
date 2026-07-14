@@ -28,16 +28,26 @@ export class NotificationsController {
   }
 
   @Post('push-token')
-  registerPushToken(
+  async registerPushToken(
     @Req() req: any,
     @Body() body: { token: string; platform?: string },
   ) {
-    return this.service.upsertPushToken(
+    const result = await this.service.upsertPushToken(
       req.user.sub,
       body.token,
       body.platform ?? 'android',
     );
+    
+    // // Send a test notification to confirm the token is working
+    // await this.service.sendTestNotification(req.user.sub, body.token);
+    
+    return { success: true, data: result };
   }
+
+  // @Post('test-push')
+  // async testPushNotification(@Req() req: any) {
+  //   return await this.service.sendTestNotificationToUser(req.user.sub);
+  // }
 
   @Post('run-deadline-reminders')
   runDeadlineReminders() {

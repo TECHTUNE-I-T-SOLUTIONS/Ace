@@ -21,7 +21,12 @@ export default function EditScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const result = await apiGet<any>(`/${params.type}s/${params.id}`);
+      // Handle different endpoint patterns for different types
+      let endpoint = `/${params.type}s/${params.id}`;
+      if (params.type === 'study') endpoint = `/study-sessions/${params.id}`;
+      if (params.type === 'diary') endpoint = `/diary/${params.id}`;
+      
+      const result = await apiGet<any>(endpoint);
       setData(result);
       setForm(result);
     } catch (error: any) {
@@ -35,7 +40,12 @@ export default function EditScreen() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await apiJson(`/${params.type}s/${params.id}`, 'PATCH', form);
+      // Handle different endpoint patterns for different types
+      let endpoint = `/${params.type}s/${params.id}`;
+      if (params.type === 'study') endpoint = `/study-sessions/${params.id}`;
+      if (params.type === 'diary') endpoint = `/diary/${params.id}`;
+      
+      await apiJson(endpoint, 'PATCH', form);
       showSuccess('Updated successfully');
       router.back();
     } catch (error: any) {

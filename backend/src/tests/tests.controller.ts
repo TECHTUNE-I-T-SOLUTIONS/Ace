@@ -1,11 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { TestsService } from './tests.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('tests')
 @UseGuards(JwtAuthGuard)
 export class TestsController {
-  constructor(private readonly service: TestsService) {}
+  constructor(
+    private readonly service: TestsService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   @Get()
   async list(@Req() req: any) {
@@ -14,7 +18,10 @@ export class TestsController {
 
   @Post()
   async create(@Req() req: any, @Body() body: any) {
-    return this.service.create(req.user.sub, body);
+    const result = await this.service.create(req.user.sub, body);
+    // Send push notification for test creation
+    await this.notifications.sendItemCreatedNotification(req.user.sub, 'test', body.title || 'New Test');
+    return result;
   }
 
   @Patch(':id')

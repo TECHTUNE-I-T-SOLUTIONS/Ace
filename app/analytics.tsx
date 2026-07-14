@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard } from '../src/components';
 import { colors } from '../src/theme';
 import { ScreenShell } from '../src/screen-shell';
 import { apiGet } from '../src/api';
 import { showError } from '../src/toast';
+import { router } from 'expo-router';
 
 export default function AnalyticsScreen() {
   const [metrics, setMetrics] = useState<[string, number][]>([]);
   const [loading, setLoading] = useState(true);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     apiGet<Record<string, number>>('/analytics/overview')
@@ -26,90 +28,115 @@ export default function AnalyticsScreen() {
   const maxVal = Math.max(...metrics.map(([, v]) => v), 1);
 
   return (
-    <ScreenShell title="Analytics">
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.grid}>
-          {metrics.map(([label, value]) => (
-            <GlassCard key={label} style={styles.card}>
-              <View style={[styles.statIcon, { backgroundColor: getAccent(label) }]}>
-                <Ionicons name={getIcon(label)} size={20} color="#fff" />
-              </View>
-              <View>
-                <Text style={styles.value}>{value}</Text>
-                <Text style={styles.label}>{label}</Text>
-              </View>
-            </GlassCard>
-          ))}
-        </View>
-
-        <GlassCard style={styles.chartCard}>
-          <View style={styles.chartHeader}>
-            <Text style={styles.panelTitle}>Weekly Activity</Text>
-            <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-              <Text style={styles.legendText}>Hours</Text>
-            </View>
-          </View>
-          <View style={styles.barChart}>
-            {WEEK_DATA.map((item) => (
-              <View key={item.day} style={styles.chartCol}>
-                <View style={styles.barContainer}>
-                  <View 
-                    style={[
-                      styles.barFillMain, 
-                      { 
-                        height: `${(item.val / 8) * 100}%`,
-                        backgroundColor: item.val > 6 ? colors.success : colors.primary
-                      }
-                    ]} 
-                  />
-                </View>
-                <Text style={styles.dayLabel}>{item.day}</Text>
-              </View>
-            ))}
-          </View>
-        </GlassCard>
-
-        <GlassCard style={styles.chartCard}>
-          <Text style={styles.panelTitle}>Metric Distribution</Text>
-          <View style={styles.chartContainer}>
+    <>
+      <ScreenShell 
+        title="Analytics"
+        rightAction={
+          <Pressable onPress={() => setShowMenu(true)} style={styles.menuButton}>
+            <Ionicons name="ellipsis-vertical" size={24} color="#fff" />
+          </Pressable>
+        }
+      >
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.grid}>
             {metrics.map(([label, value]) => (
-              <View key={label} style={styles.barWrapper}>
-                <View style={styles.barLabelGroup}>
-                  <Text style={styles.barLabel}>{label}</Text>
-                  <Text style={styles.barValue}>{value}</Text>
+              <GlassCard key={label} style={styles.card}>
+                <View style={[styles.statIcon, { backgroundColor: getAccent(label) }]}>
+                  <Ionicons name={getIcon(label)} size={20} color="#fff" />
                 </View>
-                <View style={styles.barBackground}>
-                  <View 
-                    style={[
-                      styles.barFill, 
-                      { 
-                        width: `${(value / maxVal) * 100}%`,
-                        backgroundColor: getAccent(label)
-                      }
-                    ]} 
-                  />
+                <View>
+                  <Text style={styles.value}>{value}</Text>
+                  <Text style={styles.label}>{label}</Text>
                 </View>
-              </View>
+              </GlassCard>
             ))}
           </View>
-        </GlassCard>
 
-        <GlassCard style={styles.panel}>
-          <View style={styles.panelHeader}>
-            <Ionicons name="bulb-outline" size={24} color={colors.warning} />
-            <Text style={styles.panelTitle}>Academic Insights</Text>
-          </View>
-          <Text style={styles.panelBody}>
-            Live counts now come from your backend analytics endpoint. This section provides a real-time overview of your academic progress.
-          </Text>
-          <View style={styles.divider} />
-          <Text style={styles.panelFooter}>
-            Trends and performance summaries will be added as more data becomes available.
-          </Text>
-        </GlassCard>
-      </ScrollView>
-    </ScreenShell>
+          <GlassCard style={styles.chartCard}>
+            <View style={styles.chartHeader}>
+              <Text style={styles.panelTitle}>Weekly Activity</Text>
+              <View style={styles.legendRow}>
+                <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+                <Text style={styles.legendText}>Hours</Text>
+              </View>
+            </View>
+            <View style={styles.barChart}>
+              {WEEK_DATA.map((item) => (
+                <View key={item.day} style={styles.chartCol}>
+                  <View style={styles.barContainer}>
+                    <View 
+                      style={[
+                        styles.barFillMain, 
+                        { 
+                          height: `${(item.val / 8) * 100}%`,
+                          backgroundColor: item.val > 6 ? colors.success : colors.primary
+                        }
+                      ]} 
+                    />
+                  </View>
+                  <Text style={styles.dayLabel}>{item.day}</Text>
+                </View>
+              ))}
+            </View>
+          </GlassCard>
+
+          <GlassCard style={styles.chartCard}>
+            <Text style={styles.panelTitle}>Metric Distribution</Text>
+            <View style={styles.chartContainer}>
+              {metrics.map(([label, value]) => (
+                <View key={label} style={styles.barWrapper}>
+                  <View style={styles.barLabelGroup}>
+                    <Text style={styles.barLabel}>{label}</Text>
+                    <Text style={styles.barValue}>{value}</Text>
+                  </View>
+                  <View style={styles.barBackground}>
+                    <View 
+                      style={[
+                        styles.barFill, 
+                        { 
+                          width: `${(value / maxVal) * 100}%`,
+                          backgroundColor: getAccent(label)
+                        }
+                      ]} 
+                    />
+                  </View>
+                </View>
+              ))}
+            </View>
+          </GlassCard>
+
+          <GlassCard style={styles.panel}>
+            <View style={styles.panelHeader}>
+              <Ionicons name="bulb-outline" size={24} color={colors.warning} />
+              <Text style={styles.panelTitle}>Academic Insights</Text>
+            </View>
+            <Text style={styles.panelBody}>
+              Live counts now come from your backend analytics endpoint. This section provides a real-time overview of your academic progress.
+            </Text>
+            <View style={styles.divider} />
+            <Text style={styles.panelFooter}>
+              Trends and performance summaries will be added as more data becomes available.
+            </Text>
+          </GlassCard>
+        </ScrollView>
+      </ScreenShell>
+
+      {/* Menu Modal */}
+      <Modal visible={showMenu} transparent animationType="fade" onRequestClose={() => setShowMenu(false)}>
+        <Pressable style={styles.menuBackdrop} onPress={() => setShowMenu(false)}>
+          <Pressable style={styles.menuCard} onPress={(e) => e.stopPropagation()}>
+            <MenuItem label="Notes" icon="create" color="#FF6B9D" onPress={() => { setShowMenu(false); router.push('/notes'); }} />
+            <MenuItem label="Courses" icon="book" color="#3D7CFF" onPress={() => { setShowMenu(false); router.push('/courses'); }} />
+            <MenuItem label="Assignments" icon="document-text" color="#B14CFF" onPress={() => { setShowMenu(false); router.push('/assignments'); }} />
+            <MenuItem label="Tests" icon="flask" color="#F59E0B" onPress={() => { setShowMenu(false); router.push('/tests'); }} />
+            <MenuItem label="Exams" icon="school" color="#FF5C62" onPress={() => { setShowMenu(false); router.push('/exams'); }} />
+            <MenuItem label="Grades" icon="medal" color="#10C06D" onPress={() => { setShowMenu(false); router.push('/grades'); }} />
+            <MenuItem label="Attendance" icon="calendar-clear-outline" color="#23B7FF" onPress={() => { setShowMenu(false); router.push('/attendance'); }} />
+            <MenuItem label="Settings" icon="settings" color="#7B8EAF" onPress={() => { setShowMenu(false); router.push('/settings'); }} />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }
 
@@ -137,6 +164,18 @@ function getAccent(label: string) {
   if (label.includes('Test')) return colors.warning;
   if (label.includes('Exam')) return colors.success;
   return colors.primary;
+}
+
+function MenuItem({ label, icon, color, onPress }: { label: string; icon: keyof typeof Ionicons.glyphMap; color: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} style={styles.menuItem}>
+      <View style={[styles.menuItemIcon, { backgroundColor: color + '20' }]}>
+        <Ionicons name={icon} size={20} color={color} />
+      </View>
+      <Text style={styles.menuItemLabel}>{label}</Text>
+      <Ionicons name="chevron-forward" size={16} color={colors.muted} />
+    </Pressable>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -169,4 +208,10 @@ const styles = StyleSheet.create({
   panelBody: { color: '#B2C3E1', lineHeight: 24, fontSize: 14 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 4 },
   panelFooter: { color: colors.muted, fontSize: 12, fontStyle: 'italic' },
+  menuButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'flex-end', padding: 24 },
+  menuCard: { backgroundColor: colors.surface, borderRadius: 24, padding: 16, width: '100%', maxWidth: 280 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.03)', marginBottom: 8 },
+  menuItemIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  menuItemLabel: { color: '#fff', fontSize: 14, fontWeight: '700', flex: 1 },
 });

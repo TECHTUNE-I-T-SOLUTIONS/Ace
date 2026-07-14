@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } fro
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { TasksService } from './tasks.service';
 import { SupabaseService } from '../supabase/supabase.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard)
@@ -9,6 +10,7 @@ export class TasksController {
   constructor(
     private readonly service: TasksService,
     private readonly supabase: SupabaseService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   @Get()
@@ -18,7 +20,10 @@ export class TasksController {
 
   @Post()
   async create(@Req() req: any, @Body() body: any) {
-    return this.service.create(req.user.sub, body);
+    const result = await this.service.create(req.user.sub, body);
+    // Send push notification for task creation
+    await this.notifications.sendItemCreatedNotification(req.user.sub, 'task', body.title || 'New Task');
+    return result;
   }
 
   @Patch(':id')

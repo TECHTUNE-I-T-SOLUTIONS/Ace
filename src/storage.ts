@@ -25,21 +25,33 @@ export async function pickImage() {
 export async function uploadToSupabase(bucket: string, uri: string, path: string) {
   if (!supabase) throw new Error('Supabase not configured');
   
-  const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
-  const binaryString = atob(base64);
-  const bytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
+  try {
+    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: 'base64' });
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    
+    // Get the current user to include in the path for RLS
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+    
+    // Prepend user ID to path for RLS policy compliance
+    const userPath = `${user.id}/${path}`;
+    
+    const { error } = await supabase.storage.from(bucket).upload(userPath, bytes.buffer, {
+      upsert: true,
+      contentType: bucket === 'avatars' ? 'image/jpeg' : 'application/octet-stream',
+    });
+    
+    if (error) throw error;
+    const { data } = supabase.storage.from(bucket).getPublicUrl(userPath);
+    return data.publicUrl;
+  } catch (error: any) {
+    console.error('Upload error:', error);
+    throw new Error(`Failed to upload: ${error.message}`);
   }
-  
-  const { error } = await supabase.storage.from(bucket).upload(path, bytes.buffer, {
-    upsert: true,
-    contentType: bucket === 'avatars' ? 'image/jpeg' : 'application/octet-stream',
-  });
-  
-  if (error) throw error;
-  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-  return data.publicUrl;
 }
 
 export function storagePath(bucketFolder: string, fileName: string, userId?: string) {

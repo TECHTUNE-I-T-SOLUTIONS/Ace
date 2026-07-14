@@ -163,6 +163,8 @@ export default function Dashboard() {
           <ServiceItem label="Tests" icon="flask" color="#F59E0B" onPress={() => router.push('/tests')} />
           <ServiceItem label="Grades" icon="medal" color="#10C06D" onPress={() => router.push('/grades')} />
           <ServiceItem label="Attendance" icon="calendar-clear-outline" color="#23B7FF" onPress={() => router.push('/attendance')} />
+          <ServiceItem label="Notes" icon="create" color="#FF6B9D" onPress={() => router.push('/notes')} />
+          <ServiceItem label="Analytics" icon="stats-chart" color="#9C27B0" onPress={() => router.push('/analytics')} />
           <ServiceItem label="Search" icon="search" color="#AFC0DF" onPress={() => router.push('/search')} />
           <ServiceItem label="Settings" icon="settings" color="#7B8EAF" onPress={() => router.push('/settings')} />
           <ServiceItem label="Audit Logs" icon="shield-checkmark" color="#6F5DFF" onPress={() => router.push('/audit-logs')} />

@@ -35,3 +35,4 @@ backend/
 *.log
 .DS_Store
 Thumbs.db
+.expo-tmp/

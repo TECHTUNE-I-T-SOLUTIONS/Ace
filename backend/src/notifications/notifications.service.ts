@@ -230,4 +230,191 @@ export class NotificationsService {
       this.logger.error(`Failed to send reminder push notifications: ${(error as Error).message}`);
     }
   }
+
+  /** Send a test notification to verify push token is working */
+  async sendTestNotification(userId: string, token: string) {
+    try {
+      await this.push.sendSmart(token, 'Push Notifications Enabled!', 'You will now receive notifications for assignments, tests, and deadlines.', { 
+        type: 'test',
+        category: 'system'
+      });
+      this.logger.log(`Test notification sent to user ${userId}`);
+    } catch (error) {
+      this.logger.error(`Failed to send test notification: ${(error as Error).message}`);
+    }
+  }
+
+  /** Send test notification to all tokens for a user */
+  async sendTestNotificationToUser(userId: string) {
+    try {
+      const { data: tokens, error } = await this.supabase.admin
+        .from('push_notification_tokens')
+        .select('token')
+        .eq('user_id', userId);
+
+      if (error || !tokens || tokens.length === 0) {
+        return { success: false, message: 'No push tokens found' };
+      }
+
+      for (const tokenObj of tokens) {
+        await this.push.sendSmart(tokenObj.token, 'Test Notification', 'This is a test notification from Ace.', { 
+          type: 'test',
+          category: 'system'
+        });
+      }
+
+      this.logger.log(`Test notification sent to ${tokens.length} tokens for user ${userId}`);
+      return { success: true, message: `Test notification sent to ${tokens.length} device(s)` };
+    } catch (error) {
+      this.logger.error(`Failed to send test notification to user: ${(error as Error).message}`);
+      return { success: false, message: (error as Error).message };
+    }
+  }
+
+  /** Send push notification when user creates a new item */
+  async sendItemCreatedNotification(userId: string, itemType: string, itemTitle: string) {
+    try {
+      this.logger.log(`Attempting to send item created notification for ${itemType}: ${itemTitle} to user ${userId}`);
+
+      // Check if user has notifications enabled
+      const { data: settings, error: settingsError } = await this.supabase.admin
+        .from('settings')
+        .select('notifications_enabled')
+        .eq('user_id', userId)
+        .single();
+
+      if (settingsError) {
+        this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
+      }
+
+      if (!settings?.notifications_enabled) {
+        this.logger.log(`Notifications disabled for user ${userId}, skipping push notification`);
+        return;
+      }
+
+      // Get user's push tokens
+      const { data: tokens, error: tokenError } = await this.supabase.admin
+        .from('push_notification_tokens')
+        .select('token')
+        .eq('user_id', userId);
+
+      if (tokenError) {
+        this.logger.error(`Failed to fetch push tokens for user ${userId}: ${tokenError.message}`);
+        return;
+      }
+
+      if (!tokens || tokens.length === 0) {
+        this.logger.log(`No push tokens found for user ${userId}, skipping push notification`);
+        return;
+      }
+
+      const title = `${itemType.charAt(0).toUpperCase() + itemType.slice(1)} Created`;
+      const body = `You successfully created "${itemTitle}"`;
+
+      this.logger.log(`Sending push notification to ${tokens.length} token(s) for user ${userId}`);
+
+      for (const tokenObj of tokens) {
+        await this.push.sendSmart(tokenObj.token, title, body, { 
+          type: 'item_created',
+          category: itemType,
+          itemType
+        });
+      }
+
+      // Also create a notification record
+      await this.supabase.admin.from('notifications').insert({
+        user_id: userId,
+        title,
+        body,
+        type: 'info',
+        category: itemType,
+        is_read: false,
+      });
+
+      this.logger.log(`Item created notification sent successfully for ${itemType}: ${itemTitle}`);
+    } catch (error) {
+      this.logger.error(`Failed to send item created notification: ${(error as Error).message}`);
+    }
+  }
+
+  /** Send push notification when user logs in */
+  async sendLoginNotification(userId: string) {
+    try {
+      this.logger.log(`Attempting to send login notification for user ${userId}`);
+
+      // Check if user has notifications enabled
+      const { data: settings, error: settingsError } = await this.supabase.admin
+        .from('settings')
+        .select('notifications_enabled')
+        .eq('user_id', userId)
+        .single();
+
+      if (settingsError) {
+        this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
+      }
+
+      if (!settings?.notifications_enabled) {
+        this.logger.log(`Notifications disabled for user ${userId}, skipping login notification`);
+        return;
+      }
+
+      // Get user's push tokens
+      const { data: tokens, error: tokenError } = await this.supabase.admin
+        .from('push_notification_tokens')
+        .select('token')
+        .eq('user_id', userId);
+
+      if (tokenError) {
+        this.logger.error(`Failed to fetch push tokens for user ${userId}: ${tokenError.message}`);
+        return;
+      }
+
+      if (!tokens || tokens.length === 0) {
+        this.logger.log(`No push tokens found for user ${userId}, skipping login notification`);
+        return;
+      }
+
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      this.logger.log(`Sending login notification to ${tokens.length} token(s) for user ${userId}`);
+
+      for (const tokenObj of tokens) {
+        await this.push.sendSmart(tokenObj.token, 'Welcome Back!', `You logged in at ${timeString}`, { 
+          type: 'login',
+          category: 'system'
+        });
+      }
+
+      this.logger.log(`Login notification sent successfully for user ${userId}`);
+    } catch (error) {
+      this.logger.error(`Failed to send login notification: ${(error as Error).message}`);
+    }
+  }
+
+  /** Send push notification when user signs up */
+  async sendSignupNotification(userId: string) {
+    try {
+      // Get user's push tokens
+      const { data: tokens, error } = await this.supabase.admin
+        .from('push_notification_tokens')
+        .select('token')
+        .eq('user_id', userId);
+
+      if (error || !tokens || tokens.length === 0) {
+        return;
+      }
+
+      for (const tokenObj of tokens) {
+        await this.push.sendSmart(tokenObj.token, 'Welcome to Ace!', 'Your account has been created successfully. Start organizing your academic life!', { 
+          type: 'signup',
+          category: 'system'
+        });
+      }
+
+      this.logger.log(`Signup notification sent for user ${userId}`);
+    } catch (error) {
+      this.logger.error(`Failed to send signup notification: ${(error as Error).message}`);
+    }
+  }
 }

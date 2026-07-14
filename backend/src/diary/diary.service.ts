@@ -13,6 +13,12 @@ export class DiaryService {
     return { data: data ?? [] };
   }
 
+  async get(id: string, userId: string) {
+    const { data, error } = await this.supabase.admin.from('diary_entries').select('*').eq('id', id).eq('user_id', userId).single();
+    if (error) throw error;
+    return data;
+  }
+
   async create(userId: string, body: any) {
     const { data, error } = await this.supabase.admin.from('diary_entries').insert({ ...body, user_id: userId }).select().single();
     if (error) throw error;

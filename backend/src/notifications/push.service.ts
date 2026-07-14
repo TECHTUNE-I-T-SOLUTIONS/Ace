@@ -7,11 +7,16 @@ export class PushService {
   /** Send push via Expo Push API (for Expo Go / managed workflow) */
   async sendExpoPush(expoPushToken: string, title: string, body: string, data?: Record<string, string>) {
     try {
+      const accessToken = process.env.EXPO_ACCESS_TOKEN;
+      if (!accessToken) {
+        this.logger.warn('EXPO_ACCESS_TOKEN not set - push notifications may not work');
+      }
+
       const response = await fetch('https://exp.host/--/api/v2/push/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.EXPO_ACCESS_TOKEN ?? ''}`,
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         },
         body: JSON.stringify({
           to: expoPushToken,
@@ -38,6 +43,11 @@ export class PushService {
 
   /** Send via Expo Push API (mobile app uses Expo tokens) */
   async sendSmart(token: string, title: string, body: string, data?: Record<string, string>) {
-    return this.sendExpoPush(token, title, body, data);
+    this.logger.log(`Sending push notification: title="${title}", body="${body}" to token ${token.substring(0, 15)}...`);
+    const result = await this.sendExpoPush(token, title, body, data);
+    if (result && result.data) {
+      this.logger.log(`Push notification result: ${JSON.stringify(result.data)}`);
+    }
+    return result;
   }
 }

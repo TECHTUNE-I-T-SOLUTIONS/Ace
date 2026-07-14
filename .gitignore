@@ -46,3 +46,4 @@ supabase/.cache/
 coverage/
 .idea/
 keys/
+.expo-tmp/

@@ -16,11 +16,10 @@ export function usePushTokenRegistration() {
         // Configure how notifications are shown when app is in foreground
         await Notifications.setNotificationHandler({
           handleNotification: async () => ({
-            shouldShowAlert: true,
-            shouldPlaySound: true,
-            shouldSetBadge: true,
             shouldShowBanner: true,
             shouldShowList: true,
+            shouldPlaySound: true,
+            shouldSetBadge: true,
           }),
         });
 
@@ -45,8 +44,9 @@ export function usePushTokenRegistration() {
         }
 
         // Get Expo push token
+        const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
         const tokenData = await Notifications.getExpoPushTokenAsync({
-          projectId: process.env.EXPO_PUBLIC_PROJECT_ID ?? 'ace-mobile',
+          projectId: projectId,
         });
 
         const expoPushToken = tokenData.data;
@@ -127,8 +127,9 @@ export function usePushTokenManager() {
       }
 
       // Get Expo push token
+      const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
       const tokenData = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_PROJECT_ID ?? 'ace-mobile',
+        projectId: projectId,
       });
 
       const expoPushToken = tokenData.data;

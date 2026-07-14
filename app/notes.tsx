@@ -79,49 +79,6 @@ export default function NotesScreen() {
     <ScreenShell title="My Notes">
       <View style={styles.header}>
         <PrimaryButton title="Create New Note" icon="add" onPress={openCreate} />
-        <View style={styles.uploadButtons}>
-          <Pressable 
-            onPress={async () => {
-              setUploading(true);
-              try {
-                const assets = await pickAttachment();
-                const uploaded: string[] = [];
-                for (const asset of assets) {
-                  const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
-                  uploaded.push(url);
-                }
-                setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), ...uploaded].join(', ') }));
-              } catch (error: any) {
-                showError(error.message ?? 'Upload failed');
-              } finally {
-                setUploading(false);
-              }
-            }}
-            style={styles.uploadBtn}
-          >
-            <Ionicons name="document-attach-outline" size={18} color={colors.primary} />
-            <Text style={styles.uploadBtnText}>File</Text>
-          </Pressable>
-          <Pressable 
-            onPress={async () => {
-              setUploading(true);
-              try {
-                const asset = await pickImage();
-                if (!asset) return;
-                const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
-                setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), url].join(', ') }));
-              } catch (error: any) {
-                showError(error.message ?? 'Upload failed');
-              } finally {
-                setUploading(false);
-              }
-            }}
-            style={styles.uploadBtn}
-          >
-            <Ionicons name="image-outline" size={18} color={colors.primary} />
-            <Text style={styles.uploadBtnText}>Image</Text>
-          </Pressable>
-        </View>
       </View>
 
       <GlassCard style={styles.searchCard}>
@@ -176,7 +133,60 @@ export default function NotesScreen() {
         )}
       />
 
-      <CrudModal visible={!!mode} title={mode === 'edit' ? 'Edit Note' : 'New Note'} fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(null)} onSubmit={submit} />
+      <CrudModal 
+        visible={!!mode} 
+        title={mode === 'edit' ? 'Edit Note' : 'New Note'} 
+        fields={fields} 
+        values={draft} 
+        onChange={setDraft} 
+        onClose={() => setMode(null)} 
+        onSubmit={submit}
+        customActions={
+          <View style={styles.uploadButtons}>
+            <Pressable 
+              onPress={async () => {
+                setUploading(true);
+                try {
+                  const assets = await pickAttachment();
+                  const uploaded: string[] = [];
+                  for (const asset of assets) {
+                    const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
+                    uploaded.push(url);
+                  }
+                  setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), ...uploaded].join(', ') }));
+                } catch (error: any) {
+                  showError(error.message ?? 'Upload failed');
+                } finally {
+                  setUploading(false);
+                }
+              }}
+              style={styles.uploadBtn}
+            >
+              <Ionicons name="document-attach-outline" size={18} color={colors.primary} />
+              <Text style={styles.uploadBtnText}>File</Text>
+            </Pressable>
+            <Pressable 
+              onPress={async () => {
+                setUploading(true);
+                try {
+                  const asset = await pickImage();
+                  if (!asset) return;
+                  const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
+                  setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), url].join(', ') }));
+                } catch (error: any) {
+                  showError(error.message ?? 'Upload failed');
+                } finally {
+                  setUploading(false);
+                }
+              }}
+              style={styles.uploadBtn}
+            >
+              <Ionicons name="image-outline" size={18} color={colors.primary} />
+              <Text style={styles.uploadBtnText}>Image</Text>
+            </Pressable>
+          </View>
+        }
+      />
     </ScreenShell>
   );
 }

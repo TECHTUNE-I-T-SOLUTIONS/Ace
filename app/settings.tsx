@@ -5,6 +5,7 @@ import { ScreenShell } from '../src/screen-shell';
 import { apiGet, apiJson } from '../src/api';
 import { showError, showSuccess } from '../src/toast';
 import { usePushTokenManager } from '../src/use-push-token';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<any>(null);
@@ -12,9 +13,23 @@ export default function SettingsScreen() {
   const [toggling, setToggling] = useState<string | null>(null);
   const { registerToken } = usePushTokenManager();
 
-  useEffect(() => {
-    apiGet('/settings').then((data:any)=>setSettings(data.data ?? data)).catch((e)=>showError(e.message)).finally(()=>setLoading(false));
-  }, []);
+  const fetchSettings = async () => {
+    setLoading(true);
+    try {
+      const data = await apiGet('/settings');
+      setSettings(data.data ?? data);
+    } catch (e: any) {
+      showError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchSettings();
+    }, [])
+  );
 
   const toggle = async (key: string) => {
     try {

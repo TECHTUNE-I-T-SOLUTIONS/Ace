@@ -1,15 +1,22 @@
 import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { UsersService } from './users.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly users: UsersService) {}
+  constructor(
+    private readonly users: UsersService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   @Get('me')
-  me(@Req() req: any) {
-    return this.users.me(req.user.sub);
+  async me(@Req() req: any) {
+    const result = await this.users.me(req.user.sub);
+    // Send login notification
+    await this.notifications.sendLoginNotification(req.user.sub);
+    return result;
   }
 
   @Patch('me')
