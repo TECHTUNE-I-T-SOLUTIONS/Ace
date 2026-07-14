@@ -133,6 +133,8 @@ export function usePushTokenManager() {
 
       const expoPushToken = tokenData.data;
 
+      console.log('Registering push token with backend:', expoPushToken.substring(0, 20) + '...');
+
       // Register with backend
       await apiJson('/notifications/push-token', 'POST', {
         token: expoPushToken,
@@ -143,14 +145,23 @@ export function usePushTokenManager() {
       console.log('Push token registered successfully from settings');
       return true;
     } catch (error: any) {
+      console.error('Failed to register push token:', error);
+      
+      // Provide more detailed error information
       if (error?.message?.includes('MISSING_INSTANCEID_SERVICE') || error?.message?.includes('Fetching the token failed')) {
-        console.log('Push notifications require a development build.');
+        console.log('Push notifications require a development build, not Expo Go.');
+        throw new Error('Push notifications require a development build. Please use a development build instead of Expo Go.');
       } else if (error?.message?.includes('SQLiteException') || error?.message?.includes('database')) {
         console.warn('Push notification database error:', error.message);
+        throw new Error('Database error. Please try again.');
+      } else if (error?.response?.data?.message) {
+        // Backend error
+        throw new Error(error.response.data.message || 'Failed to register with server');
+      } else if (error?.message) {
+        throw new Error(error.message);
       } else {
-        console.error('Failed to register push token:', error);
+        throw new Error('Failed to register push notifications. Please try again.');
       }
-      return false;
     }
   };
 
