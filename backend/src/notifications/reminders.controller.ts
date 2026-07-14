@@ -2,6 +2,7 @@ import { Controller, Get, Post, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PushService } from './push.service';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @ApiTags('reminders')
 @Controller('reminders')
@@ -307,10 +308,11 @@ export class RemindersController {
   }
 
   @Get('check')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Check for due reminders for current user' })
   async checkReminders(@Req() req: any) {
     const now = new Date();
-    const userId = req.user?.id; // Get from auth middleware
+    const userId = req.user.sub; // Get from auth middleware
     
     if (!userId) {
       throw new Error('Unauthorized');
