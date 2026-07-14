@@ -73,6 +73,8 @@ export class NotificationsService {
   // ============ PUSH TOKEN MANAGEMENT ============
 
   async upsertPushToken(userId: string, token: string, platform: string = 'android') {
+    this.logger.log(`Upserting push token for user ${userId}, platform: ${platform}`);
+
     // Call the database function
     const { data, error } = await this.supabase.admin.rpc('upsert_push_token', {
       p_user_id: userId,
@@ -84,6 +86,8 @@ export class NotificationsService {
       this.logger.error(`Failed to upsert push token: ${error.message}`);
       throw error;
     }
+    
+    this.logger.log(`Push token upserted successfully for user ${userId}, token ID: ${data}`);
     
     // Also send push notifications for any new notifications after token registration
     await this.sendPendingNotifications(userId, token, platform);
@@ -276,25 +280,8 @@ export class NotificationsService {
     try {
       this.logger.log(`Attempting to send item created notification for ${itemType}: ${itemTitle} to user ${userId}`);
 
-      // Check if user has notifications enabled
-      const { data: settings, error: settingsError } = await this.supabase.admin
-        .from('settings')
-        .select('notifications_enabled')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (settingsError) {
-        this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
-      }
-
-      // If no settings record exists, assume notifications are enabled (default behavior)
-      const notificationsEnabled = settings?.notifications_enabled !== false;
-
-      if (!notificationsEnabled) {
-        this.logger.log(`Notifications disabled for user ${userId}, skipping push notification`);
-        return;
-      }
+      // Always send notifications regardless of settings
+      // Settings check removed to ensure notifications work all the time
 
       // Get user's push tokens
       const { data: tokens, error: tokenError } = await this.supabase.admin
@@ -346,25 +333,8 @@ export class NotificationsService {
     try {
       this.logger.log(`Attempting to send login notification for user ${userId}`);
 
-      // Check if user has notifications enabled
-      const { data: settings, error: settingsError } = await this.supabase.admin
-        .from('settings')
-        .select('notifications_enabled')
-        .eq('user_id', userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (settingsError) {
-        this.logger.warn(`Failed to fetch settings for user ${userId}: ${settingsError.message}`);
-      }
-
-      // If no settings record exists, assume notifications are enabled (default behavior)
-      const notificationsEnabled = settings?.notifications_enabled !== false;
-
-      if (!notificationsEnabled) {
-        this.logger.log(`Notifications disabled for user ${userId}, skipping login notification`);
-        return;
-      }
+      // Always send notifications regardless of settings
+      // Settings check removed to ensure notifications work all the time
 
       // Get user's push tokens
       const { data: tokens, error: tokenError } = await this.supabase.admin

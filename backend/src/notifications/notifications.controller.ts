@@ -1,10 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')
 @UseGuards(JwtAuthGuard)
 export class NotificationsController {
+  private readonly logger = new Logger(NotificationsController.name);
+
   constructor(private readonly service: NotificationsService) {}
 
   @Get()
@@ -32,14 +34,15 @@ export class NotificationsController {
     @Req() req: any,
     @Body() body: { token: string; platform?: string },
   ) {
+    this.logger.log(`Registering push token for user ${req.user.sub}: ${body.token.substring(0, 20)}...`);
+    
     const result = await this.service.upsertPushToken(
       req.user.sub,
       body.token,
       body.platform ?? 'android',
     );
     
-    // Send a test notification to confirm the token is working
-    // await this.service.sendTestNotification(req.user.sub, body.token);
+    this.logger.log(`Push token registered successfully for user ${req.user.sub}`);
     
     return { success: true, data: result };
   }
