@@ -38,16 +38,16 @@ export class NotificationsController {
       body.platform ?? 'android',
     );
     
-    // // Send a test notification to confirm the token is working
-    // await this.service.sendTestNotification(req.user.sub, body.token);
+    // Send a test notification to confirm the token is working
+    await this.service.sendTestNotification(req.user.sub, body.token);
     
     return { success: true, data: result };
   }
 
-  // @Post('test-push')
-  // async testPushNotification(@Req() req: any) {
-  //   return await this.service.sendTestNotificationToUser(req.user.sub);
-  // }
+  @Post('test-push')
+  async testPushNotification(@Req() req: any) {
+    return await this.service.sendTestNotificationToUser(req.user.sub);
+  }
 
   @Post('run-deadline-reminders')
   runDeadlineReminders() {
