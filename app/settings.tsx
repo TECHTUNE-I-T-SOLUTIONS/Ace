@@ -4,20 +4,18 @@ import { GradientShell, GlassCard } from '../src/components';
 import { ScreenShell } from '../src/screen-shell';
 import { apiGet, apiJson } from '../src/api';
 import { showError, showSuccess } from '../src/toast';
-import { usePushTokenManager } from '../src/use-push-token';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
-  const { registerToken } = usePushTokenManager();
 
   const fetchSettings = async () => {
     setLoading(true);
     try {
       const data = await apiGet('/settings');
-      setSettings(data.data ?? data);
+      setSettings((data as any).data ?? data);
     } catch (e: any) {
       showError(e.message);
     } finally {
@@ -38,18 +36,8 @@ export default function SettingsScreen() {
       await apiJson('/settings', 'PATCH', next);
       setSettings(next);
       
-      // If enabling notifications, register push token
-      if (key === 'notifications_enabled' && next[key]) {
-        const registered = await registerToken();
-        if (!registered) {
-          showError('Failed to enable push notifications. Please grant notification permission.');
-          // Revert the setting
-          const reverted = { ...next, [key]: false };
-          await apiJson('/settings', 'PATCH', reverted);
-          setSettings(reverted);
-          return;
-        }
-      }
+      // Push token is registered automatically in dashboard, no need to register here
+      // Just update the settings value
       
       showSuccess('Updated settings');
     } catch (error: any) {

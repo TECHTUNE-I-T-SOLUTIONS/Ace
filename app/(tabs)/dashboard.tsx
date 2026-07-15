@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassCard, GradientShell, PrimaryButton } from '../../src/components';
-import { apiGet } from '../../src/api';
+import { apiGet, apiJson } from '../../src/api';
 import { showError, showSuccess } from '../../src/toast';
 import { useAuth } from '../../src/auth-context';
 import { usePushTokenRegistration } from '../../src/use-push-token';
@@ -13,7 +14,7 @@ import { colors } from '../../src/theme';
 import { formatDate, formatTime } from '../../src/utils/date-utils';
 
 export default function Dashboard() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [agenda, setAgenda] = useState<any>(null);
@@ -23,12 +24,62 @@ export default function Dashboard() {
   const [showReminder, setShowReminder] = useState(false);
   const [reminderData, setReminderData] = useState<any>(null);
   const reminderShownRef = useRef<Set<string>>(new Set());
+  const tokenRegisteredRef = useRef(false);
 
   // Register push token on mount
   usePushTokenRegistration();
   
   // Check reminders every 5 minutes
   useReminderChecker(5 * 60 * 1000);
+
+  // Manual push token registration on dashboard load
+  useEffect(() => {
+    if (!user || tokenRegisteredRef.current) return;
+
+    const registerPushToken = async () => {
+      try {
+        console.log('Dashboard: Attempting to register push token...');
+        
+        // Request permissions
+        const perms: any = await Notifications.getPermissionsAsync();
+        let hasPermission = perms.granted;
+
+        if (!hasPermission) {
+          console.log('Dashboard: Requesting push notification permissions...');
+          const requested: any = await Notifications.requestPermissionsAsync();
+          hasPermission = requested.granted;
+        }
+
+        if (!hasPermission) {
+          console.log('Dashboard: Push notification permissions denied');
+          return;
+        }
+
+        // Get Expo push token
+        const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
+        const tokenData = await Notifications.getExpoPushTokenAsync({
+          projectId: projectId,
+        });
+
+        const expoPushToken = tokenData.data;
+        console.log('Dashboard: Got push token:', expoPushToken.substring(0, 20) + '...');
+
+        // Register with backend
+        await apiJson('/notifications/push-token', 'POST', {
+          token: expoPushToken,
+          platform: Platform.OS,
+        });
+
+        tokenRegisteredRef.current = true;
+        console.log('Dashboard: Push token registered successfully');
+      } catch (error: any) {
+        console.error('Dashboard: Failed to register push token:', error);
+        // Don't show error to user, just log it
+      }
+    };
+
+    registerPushToken();
+  }, [user]);
 
   const completionMissing = useMemo(() => {
     if (!profile) return [];
