@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { GradientShell, GlassCard } from '../src/components';
 import { ScreenShell } from '../src/screen-shell';
 import { apiGet, apiJson } from '../src/api';
 import { showError, showSuccess } from '../src/toast';
 import { useFocusEffect } from '@react-navigation/native';
+import { usePushTokenManager } from '../src/use-push-token';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
+  const { registerToken } = usePushTokenManager();
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -32,13 +35,62 @@ export default function SettingsScreen() {
   const toggle = async (key: string) => {
     try {
       setToggling(key);
-      const next = { ...settings, [key]: !settings?.[key] };
+      const nextValue = !settings?.[key];
+      
+      // If enabling notifications, request permission and register push token
+      if (key === 'notifications_enabled' && nextValue) {
+        const perms: any = await Notifications.getPermissionsAsync();
+        
+        if (!perms.granted) {
+          Alert.alert(
+            'Enable Notifications',
+            'To receive push notifications, you need to grant permission.',
+            [
+              { text: 'Cancel', style: 'cancel', onPress: () => setToggling(null) },
+              { 
+                text: 'Allow', 
+                onPress: async () => {
+                  const requested: any = await Notifications.requestPermissionsAsync();
+                  if (requested.granted) {
+                    await proceedWithToggle(key, nextValue);
+                  } else {
+                    showError('Notification permission denied');
+                    setToggling(null);
+                  }
+                } 
+              }
+            ]
+          );
+          return;
+        }
+        
+        // Permission already granted, register push token
+        try {
+          const registered = await registerToken();
+          if (!registered) {
+            showError('Failed to register for push notifications');
+            setToggling(null);
+            return;
+          }
+        } catch (error: any) {
+          showError(error.message);
+          setToggling(null);
+          return;
+        }
+      }
+      
+      await proceedWithToggle(key, nextValue);
+    } catch (error: any) {
+      showError(error.message);
+      setToggling(null);
+    }
+  };
+  
+  const proceedWithToggle = async (key: string, value: boolean) => {
+    try {
+      const next = { ...settings, [key]: value };
       await apiJson('/settings', 'PATCH', next);
       setSettings(next);
-      
-      // Push token is registered automatically in dashboard, no need to register here
-      // Just update the settings value
-      
       showSuccess('Updated settings');
     } catch (error: any) {
       showError(error.message);
