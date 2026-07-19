@@ -33,10 +33,11 @@ export default function Tasks() {
     try {
       if (refresh) setRefreshing(true); else setLoading(true);
       const [tasks, overview] = await Promise.all([
-        apiGetWithQuery('/tasks', { filters: filter === 'all' ? undefined : filter }),
+        apiGet<any>('/tasks'),
         apiGet('/analytics/overview'),
       ]);
-      setItems((tasks as any).data ?? tasks ?? []);
+      const allTasks = (tasks as any).data ?? tasks ?? [];
+      setItems(allTasks);
       setAnalytics(overview);
     } catch (error: any) {
       showError(error.message ?? 'Failed to load tasks');
@@ -46,7 +47,7 @@ export default function Tasks() {
     }
   };
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, []);
 
   const open = (item?: any) => {
     setSelected(item ?? null);
@@ -73,6 +74,11 @@ export default function Tasks() {
 
   const pending = useMemo(() => items.filter((item) => item.status !== 'done').length, [items]);
   const completed = useMemo(() => items.filter((item) => item.status === 'done').length, [items]);
+  
+  const filteredItems = useMemo(() => {
+    if (filter === 'all') return items;
+    return items.filter((item) => item.category === filter);
+  }, [items, filter]);
 
   return (
     <GradientShell>
@@ -99,7 +105,7 @@ export default function Tasks() {
       
       <FlatList
         contentContainerStyle={styles.list}
-        data={items}
+        data={filteredItems}
         keyExtractor={(item) => item.id}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load(true)} tintColor="#fff" />}
         ListEmptyComponent={<Text style={styles.empty}>No tasks found in this category.</Text>}

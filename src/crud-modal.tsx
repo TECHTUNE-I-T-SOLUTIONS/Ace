@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { Modal, Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView, useColorScheme } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, radii } from './theme';
+import { radii } from './theme';
+import { useColors } from './theme';
 import { PrimaryButton } from './components';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -41,8 +42,8 @@ export function CrudModal({
   const [draft, setDraft] = useState(values);
   const [currentStep, setCurrentStep] = useState(1);
   const [pickerField, setPickerField] = useState<string | null>(null);
-  const colorScheme = useColorScheme();
-  const isDark = true; // Forcing dark mode as per app design, but keeping logic for future
+  const colors = useColors();
+  const isDark = colors.backgroundDeep === '#050F1D';
 
   const visibleRef = useRef(visible);
   useEffect(() => {
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
   },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   title: { fontSize: 24, fontWeight: '900', letterSpacing: -0.5 },
-  stepIndicator: { color: colors.primary, fontSize: 13, fontWeight: '700', marginTop: 2 },
+  stepIndicator: { color: '#3D7CFF', fontSize: 13, fontWeight: '700', marginTop: 2 },
   closeBtn: { padding: 4 },
   formScroll: { maxHeight: 450 },
   form: { gap: 18, paddingBottom: 10 },
@@ -276,5 +277,5 @@ const styles = StyleSheet.create({
   pickerItem: { paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
   pickerItemActive: { backgroundColor: 'rgba(61, 124, 255, 0.1)' },
   pickerItemText: { fontSize: 16, fontWeight: '600' },
-  pickerItemTextActive: { color: colors.primary, fontWeight: '800' },
+  pickerItemTextActive: { color: '#3D7CFF', fontWeight: '800' },
 });

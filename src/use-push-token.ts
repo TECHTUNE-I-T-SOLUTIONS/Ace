@@ -2,20 +2,61 @@ import { useEffect, useRef, useState } from 'react';
 import { Platform, AppState } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 import { apiJson } from './api';
 import { useAuth } from './auth-context';
 
 const PUSH_TOKEN_STORAGE_KEY = 'push_token_registered';
 const PUSH_TOKEN_VALUE_KEY = 'push_token_value';
 const RETRY_ATTEMPTS_KEY = 'push_token_retry_attempts';
-const MAX_RETRY_ATTEMPTS = 3;
-const RETRY_DELAY_MS = 5000; // 5 seconds
+const MAX_RETRY_ATTEMPTS = 5;
+const RETRY_DELAY_MS = 3000;
+
+// Configure foreground notification handler once at module level
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+function getProjectId(): string {
+  try {
+    // Try to get from app config extra
+    const config = Constants.expoConfig;
+    const projectId = config?.extra?.eas?.projectId;
+    if (projectId) return projectId;
+  } catch {}
+  return process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
+}
 
 export function usePushTokenRegistration() {
   const { user } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
-  const retryCountRef = useRef(0);
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  // Create notification channel for Android ONCE
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      Notifications.setNotificationChannelAsync('ace-notifications', {
+        name: 'ACE Notifications',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#214FCE',
+        sound: 'notifications.wav',
+      }).catch((err: any) => {
+        console.warn('Notification channel setup failed:', err?.message || err);
+      });
+    }
+  }, []);
 
   useEffect(() => {
     if (!user || isRegistering) return;
@@ -23,153 +64,102 @@ export function usePushTokenRegistration() {
     async function register() {
       try {
         setIsRegistering(true);
-        
+
         // Check if we already have a registered token for this user
         const storedToken = await AsyncStorage.getItem(PUSH_TOKEN_VALUE_KEY);
         const registeredForUser = await AsyncStorage.getItem(PUSH_TOKEN_STORAGE_KEY);
         
+        // If already registered and token hasn't changed, skip
         if (user && registeredForUser === user.id && storedToken) {
-          console.log('Push token already registered for this user, verifying...');
-          // Verify the token is still valid by trying to get a new one
           try {
-            const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
+            const projectId = getProjectId();
             const tokenData = await Notifications.getExpoPushTokenAsync({
-              projectId: projectId,
+              projectId,
             });
-            
             const newToken = tokenData.data;
-            
-            // If token changed, re-register
             if (newToken !== storedToken) {
-              console.log('Push token changed, re-registering...');
               await registerTokenWithBackend(newToken);
-            } else {
-              console.log('Push token verified and still valid');
             }
             setIsRegistering(false);
             return;
-          } catch (verifyError) {
-            console.log('Token verification failed, will re-register:', verifyError);
+          } catch {
+            // Will re-register below
           }
         }
 
-        // Configure how notifications are shown when app is in foreground
-        await Notifications.setNotificationHandler({
-          handleNotification: async () => ({
-            shouldShowBanner: true,
-            shouldShowList: true,
-            shouldPlaySound: true,
-            shouldSetBadge: true,
-          }),
-        });
-
-        // Request permissions immediately on app start
-        const perms: any = await Notifications.getPermissionsAsync();
-        let hasPermission = perms.granted;
-
-        if (!hasPermission) {
-          console.log('Requesting push notification permissions...');
-          const requested: any = await Notifications.requestPermissionsAsync();
-          hasPermission = requested.granted;
-          
-          if (hasPermission) {
-            console.log('Push notification permissions granted');
-          } else {
-            console.log('Push notification permissions denied by user');
-            setIsRegistering(false);
-            return;
-          }
-        }
-
-        if (!hasPermission) {
+        // Request permissions
+        const { granted } = await Notifications.requestPermissionsAsync();
+        if (!granted) {
+          console.log('Push notification permissions denied');
           setIsRegistering(false);
           return;
         }
 
         // Get Expo push token
-        const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || '82fc60f5-f42e-4407-9e3b-4f2f67a45c96';
-        const tokenData = await Notifications.getExpoPushTokenAsync({
-          projectId: projectId,
-        });
+        const projectId = getProjectId();
+        let tokenData;
+        try {
+          tokenData = await Notifications.getExpoPushTokenAsync({
+            projectId,
+          });
+        } catch (tokenError: any) {
+          console.warn('Failed to get Expo push token:', tokenError?.message);
+          setIsRegistering(false);
+          return;
+        }
 
         const expoPushToken = tokenData.data;
-        console.log('Got push token:', expoPushToken.substring(0, 20) + '...');
-
+        console.log('Push token obtained:', expoPushToken?.substring(0, 20) + '...');
         await registerTokenWithBackend(expoPushToken);
-        
       } catch (error: any) {
-        console.error('Failed to register push token:', error);
+        console.error('Push token registration failed:', error?.message);
         
-        // Retry logic for production builds
-        if (!error?.message?.includes('MISSING_INSTANCEID_SERVICE') && 
-            !error?.message?.includes('Fetching the token failed')) {
-          retryCountRef.current++;
-          const retryAttempts = await AsyncStorage.getItem(RETRY_ATTEMPTS_KEY);
-          const currentRetries = retryAttempts ? parseInt(retryAttempts, 10) : 0;
+        // Retry with exponential backoff
+        const retryAttempts = await AsyncStorage.getItem(RETRY_ATTEMPTS_KEY);
+        const currentRetries = retryAttempts ? parseInt(retryAttempts, 10) : 0;
+
+        if (currentRetries < MAX_RETRY_ATTEMPTS) {
+          console.log(`Retrying push token registration (${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})...`);
+          await AsyncStorage.setItem(RETRY_ATTEMPTS_KEY, String(currentRetries + 1));
           
-          if (currentRetries < MAX_RETRY_ATTEMPTS) {
-            console.log(`Retrying push token registration (attempt ${currentRetries + 1}/${MAX_RETRY_ATTEMPTS})...`);
-            await AsyncStorage.setItem(RETRY_ATTEMPTS_KEY, String(currentRetries + 1));
-            
-            retryTimeoutRef.current = setTimeout(() => {
+          const delay = RETRY_DELAY_MS * Math.pow(2, currentRetries);
+          retryTimeoutRef.current = setTimeout(() => {
+            if (mountedRef.current) {
               setIsRegistering(false);
               register();
-            }, RETRY_DELAY_MS * (currentRetries + 1)) as unknown as NodeJS.Timeout; // Exponential backoff
-            return;
-          } else {
-            console.log('Max retry attempts reached for push token registration');
-            await AsyncStorage.removeItem(RETRY_ATTEMPTS_KEY);
-          }
-        }
-        
-        // Expo Go doesn't support push notifications (SDK 53+)
-        if (error?.message?.includes('MISSING_INSTANCEID_SERVICE') || error?.message?.includes('Fetching the token failed')) {
-          console.log('Push notifications require a development build. Skipping token registration.');
-        } else if (error?.message?.includes('SQLiteException') || error?.message?.includes('database')) {
-          console.warn('Push notification database error - notifications may be limited:', error.message);
+            }
+          }, delay);
+          return;
+        } else {
+          console.log('Max retry attempts reached for push token');
+          await AsyncStorage.removeItem(RETRY_ATTEMPTS_KEY);
         }
       } finally {
-        setIsRegistering(false);
+        if (mountedRef.current) setIsRegistering(false);
       }
     }
 
     async function registerTokenWithBackend(token: string) {
-      // Register with backend
-      await apiJson('/notifications/push-token', 'POST', {
-        token: token,
-        platform: Platform.OS,
-      });
+      try {
+        await apiJson('/notifications/push-token', 'POST', {
+          token,
+          platform: Platform.OS,
+        });
 
-      // Store successful registration
-      if (user) {
-        await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, user.id);
-        console.log('Push token registered successfully for user:', user.id);
-      }
-      await AsyncStorage.setItem(PUSH_TOKEN_VALUE_KEY, token);
-      await AsyncStorage.removeItem(RETRY_ATTEMPTS_KEY);
-      retryCountRef.current = 0;
-    }
-
-    // Create notification channel for Android
-    if (Platform.OS === 'android') {
-      Notifications.setNotificationChannelAsync('ace-notifications', {
-        name: 'ACE Notifications',
-        importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#214FCE',
-        sound: 'default',
-      }).catch((err: any) => {
-        if (err?.message?.includes('SQLiteException') || err?.message?.includes('database')) {
-          console.warn('Notification channel setup failed due to database error:', err.message);
-        } else {
-          console.error('Failed to set notification channel:', err);
+        if (user) {
+          await AsyncStorage.setItem(PUSH_TOKEN_STORAGE_KEY, user.id);
         }
-      });
+        await AsyncStorage.setItem(PUSH_TOKEN_VALUE_KEY, token);
+        await AsyncStorage.removeItem(RETRY_ATTEMPTS_KEY);
+        console.log('Push token registered with backend successfully');
+      } catch (err: any) {
+        console.error('Failed to register token with backend:', err?.message);
+        throw err;
+      }
     }
 
     register();
 
-    // Cleanup retry timeout on unmount
     return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
@@ -177,21 +167,18 @@ export function usePushTokenRegistration() {
     };
   }, [user]);
 
-  // Re-register when app comes to foreground
+  // Re-attempt when app comes to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'active' && user && !isRegistering) {
-        console.log('App came to foreground, checking push token registration...');
-        // Reset retry count when app comes to foreground to allow new attempts
+      if (nextAppState === 'active') {
         AsyncStorage.removeItem(RETRY_ATTEMPTS_KEY);
-        retryCountRef.current = 0;
       }
     });
 
     return () => {
       subscription.remove();
     };
-  }, [user, isRegistering]);
+  }, []);
 }
 
 // Hook to manually trigger push token registration (for settings toggle)

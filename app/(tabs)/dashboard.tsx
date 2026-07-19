@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { ActivityIndicator, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { GlassCard, GradientShell, PrimaryButton } from '../../src/components';
@@ -8,7 +8,6 @@ import { showError, showSuccess } from '../../src/toast';
 import { useAuth } from '../../src/auth-context';
 import { usePushTokenRegistration } from '../../src/use-push-token';
 import { useReminderChecker } from '../../src/use-reminder-checker';
-import LogoutModal from '../../src/logout-modal';
 import { colors } from '../../src/theme';
 import { formatDate, formatTime } from '../../src/utils/date-utils';
 
@@ -19,9 +18,9 @@ export default function Dashboard() {
   const [agenda, setAgenda] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [showLogout, setShowLogout] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
   const [reminderData, setReminderData] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const reminderShownRef = useRef<Set<string>>(new Set());
 
   // Register push token on mount
@@ -42,54 +41,62 @@ export default function Dashboard() {
     ].filter(Boolean) as string[];
   }, [profile]);
 
-  useEffect(() => {
-    Promise.all([
-      apiGet<any>('/users/me'),
-      apiGet<any>('/analytics/overview'),
-      apiGet<any>('/calendar/agenda'),
-      apiGet<any>('/notifications'),
-    ])
-      .then(([me, overview, calendar, notifs]) => {
-        setProfile(me);
-        setAnalytics(overview);
-        setAgenda(calendar);
-        const unread = (notifs.data ?? notifs ?? []).filter((n: any) => !n.is_read).length;
-        setUnreadCount(unread);
-        
-        // Show reminder modal if there are upcoming events
-        const today = new Date().getDay();
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const todayName = dayNames[today];
-        
-        const todayClasses = calendar?.courses?.filter((c: any) => {
-          const courseDay = c.day_of_week ?? c.dayOfWeek;
-          return courseDay === todayName || courseDay === String(today);
-        }) || [];
-        
-        const upcomingAssignments = calendar?.assignments?.filter((a: any) => {
-          if (!a.deadline_date) return false;
-          const deadline = new Date(a.deadline_date);
-          const now = new Date();
-          const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-          return diffDays >= 0 && diffDays <= 3;
-        }) || [];
-        
-        // Create a unique key for this reminder set
-        const reminderKey = `${todayClasses.length}-${upcomingAssignments.length}-${today}`;
-        
-        // Only show reminder once per day
-        if ((todayClasses.length > 0 || upcomingAssignments.length > 0) && !reminderShownRef.current.has(reminderKey)) {
-          setReminderData({
-            classes: todayClasses,
-            assignments: upcomingAssignments,
-          });
-          setShowReminder(true);
-          reminderShownRef.current.add(reminderKey);
-        }
-      })
-      .catch((error) => showError(error.message))
-      .finally(() => setLoading(false));
+  const loadData = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true); else setLoading(true);
+      const [me, overview, calendar, notifs] = await Promise.all([
+        apiGet<any>('/users/me'),
+        apiGet<any>('/analytics/overview'),
+        apiGet<any>('/calendar/agenda'),
+        apiGet<any>('/notifications'),
+      ]);
+      setProfile(me);
+      setAnalytics(overview);
+      setAgenda(calendar);
+      const unread = (notifs.data ?? notifs ?? []).filter((n: any) => !n.is_read).length;
+      setUnreadCount(unread);
+      
+      // Show reminder modal if there are upcoming events
+      const today = new Date().getDay();
+      const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const todayName = dayNames[today];
+      
+      const todayClasses = calendar?.courses?.filter((c: any) => {
+        const courseDay = c.day_of_week ?? c.dayOfWeek;
+        return courseDay === todayName || courseDay === String(today);
+      }) || [];
+      
+      const upcomingAssignments = calendar?.assignments?.filter((a: any) => {
+        if (!a.deadline_date) return false;
+        const deadline = new Date(a.deadline_date);
+        const now = new Date();
+        const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 3;
+      }) || [];
+      
+      // Create a unique key for this reminder set
+      const reminderKey = `${todayClasses.length}-${upcomingAssignments.length}-${today}`;
+      
+      // Only show reminder once per day
+      if ((todayClasses.length > 0 || upcomingAssignments.length > 0) && !reminderShownRef.current.has(reminderKey)) {
+        setReminderData({
+          classes: todayClasses,
+          assignments: upcomingAssignments,
+        });
+        setShowReminder(true);
+        reminderShownRef.current.add(reminderKey);
+      }
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const displayName = profile?.full_name || 'Student';
   const displayLevel = profile?.level ? `Level ${profile.level}` : 'Level not set';
@@ -104,11 +111,6 @@ export default function Dashboard() {
   ];
 
   const goToCompleteProfile = () => router.push('/(auth)/profile-setup');
-  const handleSignOut = async () => {
-    await signOut();
-    showSuccess('Signed out');
-    router.replace('/(auth)/login');
-  };
 
   const todayClasses = useMemo(() => {
     if (!agenda?.courses) return [];
@@ -125,13 +127,25 @@ export default function Dashboard() {
 
   return (
     <GradientShell>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={() => loadData(true)} 
+            tintColor="#fff" 
+            colors={['#fff']} 
+            progressBackgroundColor="#2458D5"
+          />
+        }
+      >
         <View style={styles.hero}>
           <View style={styles.heroTopRow}>
             <View style={{ flex: 1, paddingRight: 8 }}>
               <Text style={styles.hello}>Welcome back,</Text>
               <Text style={styles.name} numberOfLines={1} ellipsizeMode="tail">{displayName}</Text>
-              <Text style={styles.meta} numberOfLines={1}>{displayFaculty} • {displayDepartment}</Text>
+              <Text style={styles.meta} numberOfLines={1}>{displayDepartment}</Text>
               <Text style={styles.meta}>{displayLevel}</Text>
             </View>
             <View style={styles.headerActions}>
@@ -139,8 +153,8 @@ export default function Dashboard() {
                 <Ionicons name="notifications-outline" size={20} color="#fff" />
                 {unreadCount > 0 && <View style={styles.badge}><Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text></View>}
               </Pressable>
-              <Pressable onPress={() => setShowLogout(true)} style={styles.iconButton}>
-                <Ionicons name="log-out-outline" size={22} color="#fff" />
+              <Pressable onPress={() => router.push('/search')} style={styles.iconButton}>
+                <Ionicons name="search" size={20} color="#fff" />
               </Pressable>
             </View>
           </View>
@@ -165,10 +179,6 @@ export default function Dashboard() {
           <ServiceItem label="Attendance" icon="calendar-clear-outline" color="#23B7FF" onPress={() => router.push('/attendance')} />
           <ServiceItem label="Notes" icon="create" color="#FF6B9D" onPress={() => router.push('/notes')} />
           <ServiceItem label="Analytics" icon="stats-chart" color="#9C27B0" onPress={() => router.push('/analytics')} />
-          <ServiceItem label="Search" icon="search" color="#AFC0DF" onPress={() => router.push('/search')} />
-          <ServiceItem label="Settings" icon="settings" color="#7B8EAF" onPress={() => router.push('/settings')} />
-          <ServiceItem label="Audit Logs" icon="shield-checkmark" color="#6F5DFF" onPress={() => router.push('/audit-logs')} />
-          <ServiceItem label="AI Assistant" icon="sparkles" color="#FFD700" onPress={() => router.push('/ai')} />
         </View>
 
         {loading && <ActivityIndicator color="#fff" style={{ marginVertical: 10 }} />}
@@ -225,11 +235,13 @@ export default function Dashboard() {
         </GlassCard>
       </ScrollView>
 
-      <LogoutModal
-        visible={showLogout}
-        onClose={() => setShowLogout(false)}
-        onConfirm={handleSignOut}
-      />
+      {/* AI Assistant Floating Widget */}
+      <Pressable 
+        onPress={() => router.push('/ai')} 
+        style={styles.aiFab}
+      >
+        <Ionicons name="sparkles" size={24} color="#fff" />
+      </Pressable>
 
       {/* Daily Reminder Modal */}
       <Modal visible={showReminder} transparent animationType="fade" onRequestClose={() => setShowReminder(false)}>
@@ -348,16 +360,16 @@ const styles = StyleSheet.create({
   serviceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginTop: 4 },
   serviceItem: { width: '22.5%', alignItems: 'center', gap: 6, marginBottom: 8 },
   serviceIcon: { width: 50, height: 50, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  serviceLabel: { color: '#B7C7E7', fontSize: 10, fontWeight: '800', textAlign: 'center' },
-  statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard: { width: '48.5%', padding: 16, gap: 6, minHeight: 110, justifyContent: 'center' },
+  serviceLabel: { color: colors.text, fontSize: 10, fontWeight: '800', textAlign: 'center' },
+  statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
+  statCard: { padding: 16, gap: 4, minHeight: 110, justifyContent: 'center', marginBottom: 6 },
   statIcon: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
   statValue: { color: '#fff', fontSize: 28, fontWeight: '900', lineHeight: 32 },
   statLabel: { color: '#B7C7E7', fontSize: 13, fontWeight: '700' },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 20 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '900', letterSpacing: -0.5 },
   sectionAction: { color: colors.muted, fontSize: 12, fontWeight: '700' },
-  listCard: { padding: 12 },
+  listCard: { padding: 12, marginTop: 6 },
   rowItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 16 },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.border },
   itemTitle: { color: '#fff', fontSize: 15, fontWeight: '800' },
@@ -376,4 +388,21 @@ const styles = StyleSheet.create({
   reminderItemTitle: { color: '#fff', fontSize: 14, fontWeight: '700' },
   reminderItemMeta: { color: colors.muted, fontSize: 12, marginTop: 2 },
   reminderButton: { marginTop: 10 },
+  aiFab: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#4C86FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#A5A8AF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    zIndex: 100,
+  },
 });

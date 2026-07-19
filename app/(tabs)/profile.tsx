@@ -1,11 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Image, Modal, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../../src/components';
 import { colors } from '../../src/theme';
 import { apiGet, apiJson } from '../../src/api';
+import { useAuth } from '../../src/auth-context';
 import { showError, showSuccess } from '../../src/toast';
+import LogoutModal from '../../src/logout-modal';
 import { pickImage, storagePath, uploadToSupabase } from '../../src/storage';
 import { supabase } from '../../src/lib/supabase';
 import { getActiveSchool } from '../../src/schools';
@@ -13,8 +15,13 @@ import { getActiveSchool } from '../../src/schools';
 export default function Profile() {
   const school = getActiveSchool();
   const [profile, setProfile] = useState<any>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
+  const { signOut, user } = useAuth();
+
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showLogout, setShowLogout] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -32,12 +39,26 @@ export default function Profile() {
   const selectedFaculty = useMemo(() => facultyOptions.find((item) => item.name === form.faculty) ?? null, [form.faculty, facultyOptions]);
   const departmentOptions = selectedFaculty?.departments ?? [];
 
-  useEffect(() => {
-    apiGet<any>('/users/me')
-      .then(setProfile)
-      .catch((error) => showError(error.message))
-      .finally(() => setLoading(false));
+  const loadData = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true); else setLoading(true);
+      const [me, overview] = await Promise.all([
+        apiGet<any>('/users/me'),
+        apiGet<any>('/analytics/overview'),
+      ]);
+      setProfile(me);
+      setAnalytics(overview);
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const uploadAvatar = async () => {
     try {
@@ -78,7 +99,6 @@ export default function Profile() {
       await apiJson('/users/me', 'PATCH', form);
       showSuccess('Profile updated successfully');
       setEditing(false);
-      // Reload profile
       const updated = await apiGet<any>('/users/me');
       setProfile(updated);
     } catch (error: any) {
@@ -86,6 +106,12 @@ export default function Profile() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    showSuccess('Signed out');
+    router.replace('/(auth)/login');
   };
 
   const labelOr = (value: string | null | undefined, fallback: string) => (value?.trim() ? value : fallback);
@@ -100,8 +126,24 @@ export default function Profile() {
 
   return (
     <GradientShell>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={() => loadData(true)} 
+            tintColor="#fff" 
+            colors={['#fff']} 
+            progressBackgroundColor={colors.primary}
+          />
+        }
+      >
         <View style={styles.hero}>
+          <Pressable onPress={() => router.push('/settings')} style={styles.settingsButton}>
+            <Ionicons name="settings" size={20} color="#fff" />
+          </Pressable>
+          
           <Pressable onPress={uploadAvatar} style={styles.avatarContainer}>
             {profile?.avatar_url ? (
               <Image source={{ uri: profile.avatar_url }} style={styles.avatarImage} />
@@ -135,16 +177,20 @@ export default function Profile() {
 
         <View style={styles.statsGrid}>
           <GlassCard style={styles.statCard}>
-            <Text style={styles.statValue}>{profile?.courses_count ?? 0}</Text>
+            <Text style={styles.statValue}>{analytics?.courses ?? profile?.courses_count ?? 0}</Text>
             <Text style={styles.statLabel}>Courses</Text>
           </GlassCard>
           <GlassCard style={styles.statCard}>
-            <Text style={styles.statValue}>{profile?.assignments_count ?? 0}</Text>
+            <Text style={styles.statValue}>{analytics?.assignments ?? profile?.assignments_count ?? 0}</Text>
             <Text style={styles.statLabel}>Assignments</Text>
           </GlassCard>
           <GlassCard style={styles.statCard}>
             <Text style={styles.statValue}>{profile?.gpa || '0.0'}</Text>
             <Text style={styles.statLabel}>GPA</Text>
+          </GlassCard>
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{profile?.cgpa || profile?.gpa || '0.0'}</Text>
+            <Text style={styles.statLabel}>CGPA</Text>
           </GlassCard>
         </View>
 
@@ -163,6 +209,8 @@ export default function Profile() {
         </GlassCard>
 
         <PrimaryButton title="Edit Profile Details" variant="ghost" icon="create-outline" onPress={openEdit} />
+
+        <PrimaryButton title="Sign Out" variant="light" icon="log-out-outline" onPress={() => setShowLogout(true)} />
       </ScrollView>
 
       {/* Edit Profile Modal */}
@@ -276,6 +324,13 @@ export default function Profile() {
           setShowDepartmentPicker(false);
         }}
       />
+
+      <LogoutModal
+        visible={showLogout}
+        onClose={() => setShowLogout(false)}
+        onConfirm={handleSignOut}
+      />
+
     </GradientShell>
   );
 }
@@ -366,11 +421,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   uploadingText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  statsGrid: { flexDirection: 'row', gap: 10 },
-  statCard: { flex: 1, padding: 16, alignItems: 'center', gap: 4 },
+  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  statCard: { width: '47%', padding: 16, alignItems: 'center', gap: 4 },
   statValue: { color: '#fff', fontSize: 22, fontWeight: '900' },
   statLabel: { color: colors.muted, fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
   infoCard: { padding: 20, gap: 20 },
+  iconButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', position: 'relative' }, 
+  settingsButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center', position: 'absolute', marginRight: -280, marginTop: 20 }, 
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '900' },
   fieldList: { gap: 18 },

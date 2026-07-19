@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { Ionicons } from '@expo/vector-icons';
 import { GradientShell, GlassCard } from '../src/components';
 import { ScreenShell } from '../src/screen-shell';
 import { apiGet, apiJson } from '../src/api';
 import { showError, showSuccess } from '../src/toast';
 import { useFocusEffect } from '@react-navigation/native';
 import { usePushTokenManager } from '../src/use-push-token';
+import { useTheme } from '../src/theme-context';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState<string | null>(null);
   const { registerToken } = usePushTokenManager();
+  const { mode, colors, toggleTheme } = useTheme();
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -102,35 +105,62 @@ export default function SettingsScreen() {
   return (
     <ScreenShell title="Settings">
       <GradientShell>
-        {loading ? <ActivityIndicator color="#fff" /> : null}
+        {loading ? <ActivityIndicator color={colors.text} /> : null}
+        
+        {/* Notification Settings */}
         <GlassCard style={styles.card}>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>Notifications</Text>
           <Row 
             label="Notifications" 
             value={!!settings?.notifications_enabled} 
             onPress={() => toggle('notifications_enabled')}
             disabled={toggling === 'notifications_enabled'}
+            colors={colors}
+            toggling={toggling === 'notifications_enabled'}
           />
           <Row 
             label="Study Reminders" 
             value={!!settings?.study_reminders} 
             onPress={() => toggle('study_reminders')}
             disabled={toggling === 'study_reminders'}
+            colors={colors}
+            toggling={toggling === 'study_reminders'}
           />
+        </GlassCard>
+
+        <GlassCard style={styles.card}>
+          <Text style={[styles.sectionLabel, { color: colors.muted }]}>Display</Text>
+          <View style={styles.row}>
+            <View style={styles.rowLeft}>
+              <Ionicons name={mode === 'dark' ? 'moon' : 'sunny'} size={20} color={colors.text} />
+              <Text style={[styles.label, { color: colors.text }]}>Dark Mode</Text>
+            </View>
+            <Switch
+              value={mode === 'dark'}
+              onValueChange={toggleTheme}
+              trackColor={{ false: colors.muted, true: colors.primary }}
+              thumbColor="#fff"
+              ios_backgroundColor={colors.muted}
+            />
+          </View>
         </GlassCard>
       </GradientShell>
     </ScreenShell>
   );
 }
 
-function Row({ label, value, onPress, disabled }: any) { 
+function Row({ label, value, onPress, disabled, colors, toggling }: any) { 
   return (
     <Pressable 
       onPress={onPress} 
       style={[styles.row, disabled && styles.rowDisabled]} 
       disabled={disabled}
     >
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value ? 'On' : 'Off'}</Text>
+      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <View style={styles.rowRight}>
+        <Text style={[styles.value, { color: colors.primary }]}>{value ? 'On' : 'Off'}</Text>
+        {toggling ? <ActivityIndicator size="small" color={colors.primary} /> : null}
+      </View>
     </Pressable>
   ); 
 }
@@ -138,8 +168,11 @@ function Row({ label, value, onPress, disabled }: any) {
 const styles = StyleSheet.create({ 
   title:{color:'#fff',fontSize:30,fontWeight:'900',padding:14}, 
   card:{margin:14,padding:14,gap:14}, 
-  row:{flexDirection:'row',justifyContent:'space-between', paddingVertical: 8}, 
+  sectionLabel: { fontSize: 12, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  row:{flexDirection:'row',justifyContent:'space-between', alignItems: 'center', paddingVertical: 8}, 
   rowDisabled:{opacity: 0.5},
-  label:{color:'#fff',fontWeight:'800'}, 
-  value:{color:'#86A8FF',fontWeight:'800'} 
+  rowLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  rowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  label:{fontWeight:'800', fontSize: 15}, 
+  value:{fontWeight:'800'} 
 });

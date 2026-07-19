@@ -11,6 +11,7 @@ import { apiGet } from '@/api';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -56,7 +57,12 @@ export default function Login() {
 
         <GlassCard style={styles.form}>
           <AppInput label="Email Address" placeholder="student@university.edu" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-          <AppInput label="Password" placeholder="Enter your password" secureTextEntry value={password} onChangeText={setPassword} />
+          <View style={styles.passwordContainer}>
+            <AppInput label="Password" placeholder="Enter your password" secureTextEntry={!showPassword} value={password} onChangeText={setPassword} />
+            <Pressable onPress={() => setShowPassword((prev) => !prev)} style={styles.eyeButton}>
+              <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.muted} />
+            </Pressable>
+          </View>
           <Pressable onPress={() => router.push('/(auth)/forgot-password')}>
             <Text style={styles.link}>Forgot Password?</Text>
           </Pressable>
@@ -90,4 +96,6 @@ const styles = StyleSheet.create({
   form: { padding: 16, gap: 14, borderRadius: 28, backgroundColor: 'rgba(16, 29, 51, 0.98)' },
   link: { color: '#5D89FF', fontSize: 13, fontWeight: '700' },
   footerLink: { color: '#DDE8FF', textAlign: 'center', marginTop: 6, fontWeight: '700' },
+  passwordContainer: { position: 'relative' },
+  eyeButton: { position: 'absolute', right: 14, top: 38, zIndex: 10, padding: 4 },
 });

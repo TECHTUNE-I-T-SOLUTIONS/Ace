@@ -1,3 +1,7 @@
+import { useContext } from 'react';
+import { ThemeContext } from './theme-context';
+
+// Static colors for backward compatibility (non-reactive)
 export const colors = {
   background: '#081629',
   backgroundDeep: '#050F1D',
@@ -14,6 +18,13 @@ export const colors = {
   danger: '#EF4444',
   cyan: '#23B7FF',
 };
+
+// Reactive hook that returns current theme colors
+export function useColors() {
+  const ctx = useContext(ThemeContext);
+  if (!ctx) return colors;
+  return ctx.colors;
+}
 
 export const radii = {
   xl: 32,

@@ -1,9 +1,10 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '@/theme';
+import { useColors } from '@/theme';
 
 export default function TabsLayout() {
+  const colors = useColors();
   return (
     <Tabs
       screenOptions={({ route }) => ({
@@ -11,12 +12,12 @@ export default function TabsLayout() {
         tabBarStyle: {
           height: 78,
           borderTopWidth: 0,
-          backgroundColor: '#0B162A',
+          backgroundColor: colors.surface,
           paddingTop: 10,
           paddingBottom: 12,
         },
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: '#7B8EAF',
+        tabBarInactiveTintColor: colors.muted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
         tabBarIcon: ({ color, size, focused }) => {
           const icons: Record<string, keyof typeof Ionicons.glyphMap> = {

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { GlassCard, GradientShell } from '../../src/components';
@@ -12,15 +12,26 @@ import { showError } from '../../src/toast';
 export default function Diary() {
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [mode, setMode] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    apiGet<any[]>('/diary')
-      .then((data: any) => setEntries(data.data ?? data ?? []))
-      .catch((error) => showError(error.message))
-      .finally(() => setLoading(false));
+  const load = useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) setRefreshing(true); else setLoading(true);
+      const data: any = await apiGet<any[]>('/diary');
+      setEntries(data.data ?? data ?? []);
+    } catch (error: any) {
+      showError(error.message);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const fields = useMemo(() => [
     { key: 'title', label: 'Title', placeholder: 'Diary entry title' },
@@ -44,15 +55,57 @@ export default function Diary() {
     const { error } = await supabase.from('diary_entries').insert(payload);
     if (error) throw error;
     setMode(false);
-    const res: any = await apiGet('/diary');
-    setEntries((res.data ?? res ?? []) as any[]);
+    await load(true);
   };
 
-  const totalWords = entries.reduce((sum, entry) => sum + Number(entry.word_count ?? entry.wordCount ?? 0), 0);
+  const computeWordCount = (content: string) => {
+    if (!content || !content.trim()) return 0;
+    return content.trim().split(/\s+/).length;
+  };
+
+  const entriesWithWordCount = useMemo(() => {
+    return entries.map((entry) => ({
+      ...entry,
+      _wordCount: computeWordCount(entry.content ?? entry.content ?? ''),
+    }));
+  }, [entries]);
+
+  const totalWords = useMemo(() => {
+    return entriesWithWordCount.reduce((sum, entry) => sum + entry._wordCount, 0);
+  }, [entriesWithWordCount]);
+
+  const thisMonthEntries = useMemo(() => {
+    const now = new Date();
+    return entriesWithWordCount.filter((entry) => {
+      const createdAt = new Date(entry.created_at ?? entry.createdAt);
+      return createdAt.getMonth() === now.getMonth() && createdAt.getFullYear() === now.getFullYear();
+    });
+  }, [entriesWithWordCount]);
+
+  const thisMonthWords = useMemo(() => {
+    return thisMonthEntries.reduce((sum, entry) => sum + entry._wordCount, 0);
+  }, [thisMonthEntries]);
+
+  const avgWords = useMemo(() => {
+    if (entriesWithWordCount.length === 0) return '0';
+    return String(Math.round(totalWords / entriesWithWordCount.length));
+  }, [totalWords, entriesWithWordCount]);
 
   return (
     <GradientShell>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        contentContainerStyle={styles.content} 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={() => load(true)} 
+            tintColor="#fff" 
+            colors={['#fff']} 
+            progressBackgroundColor="#D61E7E"
+          />
+        }
+      >
         <View style={styles.hero}>
           <View style={styles.heroTop}>
             <Text style={styles.title}>Personal Diary</Text>
@@ -60,8 +113,9 @@ export default function Diary() {
           </View>
           <View style={styles.stats}>
             <Stat label="Total" value={String(entries.length)} icon="heart" />
-            <Stat label="This Month" value={String(entries.filter((entry) => new Date(entry.created_at ?? entry.createdAt).getMonth() === new Date().getMonth()).length)} icon="calendar" />
-            <Stat label="Avg Words" value={entries.length ? String(Math.round(totalWords / entries.length)) : '0'} icon="happy" />
+            <Stat label="This Month" value={String(thisMonthEntries.length)} icon="calendar" />
+            <Stat label="Avg Words" value={avgWords} icon="happy" />
+            <Stat label="Total Words" value={String(totalWords)} icon="document-text" />
           </View>
         </View>
 
@@ -75,7 +129,7 @@ export default function Diary() {
 
         {loading ? <ActivityIndicator color="#fff" style={{ marginTop: 20 }} /> : null}
         
-        {entries.length ? entries.map((entry) => (
+        {entriesWithWordCount.length ? entriesWithWordCount.map((entry) => (
           <GlassCard key={entry.id} style={styles.entry}>
             <View style={styles.entryTop}>
               <View style={styles.entryHeader}>
@@ -90,7 +144,7 @@ export default function Diary() {
             <View style={styles.entryBottom}>
               <View style={styles.wordBadge}>
                 <Ionicons name="document-outline" size={12} color={colors.muted} />
-                <Text style={styles.entryWords}>{entry.word_count ?? entry.wordCount ?? 0} words</Text>
+                <Text style={styles.entryWords}>{entry._wordCount} words</Text>
               </View>
               <Pressable 
                 style={styles.readMoreBtn}
