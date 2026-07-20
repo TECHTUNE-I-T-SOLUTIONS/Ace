@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [profile, setProfile] = useState<any>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [agenda, setAgenda] = useState<any>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showReminder, setShowReminder] = useState(false);
@@ -44,15 +46,19 @@ export default function Dashboard() {
   const loadData = useCallback(async (isRefresh = false) => {
     try {
       if (isRefresh) setRefreshing(true); else setLoading(true);
-      const [me, overview, calendar, notifs] = await Promise.all([
+      const [me, overview, calendar, notifs, coursesData, assignmentsData] = await Promise.all([
         apiGet<any>('/users/me'),
         apiGet<any>('/analytics/overview'),
         apiGet<any>('/calendar/agenda'),
         apiGet<any>('/notifications'),
+        apiGet<any>('/courses'),
+        apiGet<any>('/assignments'),
       ]);
       setProfile(me);
       setAnalytics(overview);
       setAgenda(calendar);
+      setCourses(coursesData.data ?? coursesData ?? []);
+      setAssignments(assignmentsData.data ?? assignmentsData ?? []);
       const unread = (notifs.data ?? notifs ?? []).filter((n: any) => !n.is_read).length;
       setUnreadCount(unread);
       
@@ -112,18 +118,38 @@ export default function Dashboard() {
 
   const goToCompleteProfile = () => router.push('/(auth)/profile-setup');
 
+  const getValue = (item: any, keys: string[], fallback: string) => {
+    for (const key of keys) {
+      const val = item[key];
+      if (val != null && String(val).trim() !== '') return String(val).trim();
+    }
+    return fallback;
+  };
+
   const todayClasses = useMemo(() => {
-    if (!agenda?.courses) return [];
+    if (!courses.length) return [];
     const today = new Date().getDay(); // 0 = Sunday, 1 = Monday, etc.
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const todayName = dayNames[today];
-    return agenda.courses.filter((course: any) => {
+    return courses.filter((course: any) => {
       const courseDay = course.day_of_week ?? course.dayOfWeek;
       return courseDay === todayName || courseDay === String(today);
     }).slice(0, 4);
-  }, [agenda]);
+  }, [courses]);
   
-  const assignmentItems = agenda?.assignments ?? [];
+  const assignmentItems = useMemo(() => {
+    if (!assignments.length) return [];
+    const today = new Date();
+    return assignments
+      .filter((a: any) => {
+        if (!a.deadline_date) return false;
+        const deadline = new Date(a.deadline_date);
+        const diffDays = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return diffDays >= 0 && diffDays <= 14; // Next 14 days
+      })
+      .sort((a: any, b: any) => new Date(a.deadline_date).getTime() - new Date(b.deadline_date).getTime())
+      .slice(0, 4);
+  }, [assignments]);
 
   return (
     <GradientShell>
@@ -206,8 +232,8 @@ export default function Dashboard() {
               onPress={() => router.push({ pathname: '/details', params: { type: 'course', id: item.id } })}
             >
               <View>
-                <Text style={styles.itemTitle}>{item.course_title ?? item.courseTitle ?? 'Untitled course'}</Text>
-                <Text style={styles.itemSub}>{item.venue ?? 'Venue not set'}</Text>
+                <Text style={styles.itemTitle}>{getValue(item, ['course_title', 'courseTitle', 'title', 'name'], 'Untitled course')}</Text>
+                <Text style={styles.itemSub}>{getValue(item, ['venue', 'venue_name', 'location', 'room', 'classroom', 'place'], 'Venue not set')}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Text style={styles.itemTime}>{formatTime(item.start_time ?? item.startTime)}</Text>
@@ -226,8 +252,8 @@ export default function Dashboard() {
               onPress={() => router.push({ pathname: '/details', params: { type: 'assignment', id: item.id } })}
             >
               <View>
-                <Text style={styles.itemTitle}>{item.title}</Text>
-                <Text style={styles.itemSub}>{item.description ?? 'No description'}</Text>
+                <Text style={styles.itemTitle}>{getValue(item, ['title', 'name'], 'Untitled')}</Text>
+                <Text style={styles.itemSub}>{getValue(item, ['description', 'details', 'notes', 'content', 'info', 'body', 'text'], 'No description')}</Text>
               </View>
               <Text style={styles.itemTime}>{formatDate(item.deadline_date)}</Text>
             </Pressable>

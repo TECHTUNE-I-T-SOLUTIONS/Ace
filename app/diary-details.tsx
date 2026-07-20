@@ -24,6 +24,11 @@ export default function DiaryDetailsScreen() {
     loadEntry();
   }, []);
 
+  const computeWordCount = (content: string) => {
+    if (!content || !content.trim()) return 0;
+    return content.trim().split(/\s+/).length;
+  };
+
   const loadEntry = async () => {
     try {
       setLoading(true);
@@ -142,7 +147,7 @@ export default function DiaryDetailsScreen() {
           <View style={styles.statsRow}>
             <View style={styles.statBadge}>
               <Ionicons name="document-outline" size={16} color={colors.muted} />
-              <Text style={styles.statText}>{entry.word_count ?? entry.wordCount ?? 0} words</Text>
+              <Text style={styles.statText}>{computeWordCount(entry.content ?? '')} words</Text>
             </View>
             <View style={styles.statBadge}>
               <Ionicons name="time-outline" size={16} color={colors.muted} />

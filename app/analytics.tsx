@@ -53,34 +53,6 @@ export default function AnalyticsScreen() {
           </View>
 
           <GlassCard style={styles.chartCard}>
-            <View style={styles.chartHeader}>
-              <Text style={styles.panelTitle}>Weekly Activity</Text>
-              <View style={styles.legendRow}>
-                <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
-                <Text style={styles.legendText}>Hours</Text>
-              </View>
-            </View>
-            <View style={styles.barChart}>
-              {WEEK_DATA.map((item) => (
-                <View key={item.day} style={styles.chartCol}>
-                  <View style={styles.barContainer}>
-                    <View 
-                      style={[
-                        styles.barFillMain, 
-                        { 
-                          height: `${(item.val / 8) * 100}%`,
-                          backgroundColor: item.val > 6 ? colors.success : colors.primary
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={styles.dayLabel}>{item.day}</Text>
-                </View>
-              ))}
-            </View>
-          </GlassCard>
-
-          <GlassCard style={styles.chartCard}>
             <Text style={styles.panelTitle}>Metric Distribution</Text>
             <View style={styles.chartContainer}>
               {metrics.map(([label, value]) => (
@@ -107,16 +79,17 @@ export default function AnalyticsScreen() {
 
           <GlassCard style={styles.panel}>
             <View style={styles.panelHeader}>
-              <Ionicons name="bulb-outline" size={24} color={colors.warning} />
-              <Text style={styles.panelTitle}>Academic Insights</Text>
+              <Ionicons name="sparkles-outline" size={24} color={colors.primary} />
+              <Text style={styles.panelTitle}>AI Study Tips</Text>
             </View>
             <Text style={styles.panelBody}>
-              Live counts now come from your backend analytics endpoint. This section provides a real-time overview of your academic progress.
+              Need personalized study advice? Ask the ACE Assistant for tips based on your current workload and schedule.
             </Text>
             <View style={styles.divider} />
-            <Text style={styles.panelFooter}>
-              Trends and performance summaries will be added as more data becomes available.
-            </Text>
+            <Pressable onPress={() => router.push('/ai')} style={styles.aiButton}>
+              <Text style={styles.aiButtonText}>Ask ACE Assistant</Text>
+              <Ionicons name="arrow-forward" size={18} color={colors.primary} />
+            </Pressable>
           </GlassCard>
         </ScrollView>
       </ScreenShell>
@@ -140,15 +113,6 @@ export default function AnalyticsScreen() {
   );
 }
 
-const WEEK_DATA = [
-  { day: 'Mon', val: 4 },
-  { day: 'Tue', val: 6 },
-  { day: 'Wed', val: 5 },
-  { day: 'Thu', val: 7.5 },
-  { day: 'Fri', val: 3 },
-  { day: 'Sat', val: 2 },
-  { day: 'Sun', val: 1 },
-];
 
 function getIcon(label: string): keyof typeof Ionicons.glyphMap {
   if (label.includes('Course')) return 'book';
@@ -208,6 +172,8 @@ const styles = StyleSheet.create({
   panelBody: { color: '#B2C3E1', lineHeight: 24, fontSize: 14 },
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.05)', marginVertical: 4 },
   panelFooter: { color: colors.muted, fontSize: 12, fontStyle: 'italic' },
+  aiButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: 'rgba(61, 124, 255, 0.1)', paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(61, 124, 255, 0.2)' },
+  aiButtonText: { color: colors.primary, fontSize: 14, fontWeight: '800' },
   menuButton: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.08)', alignItems: 'center', justifyContent: 'center' },
   menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'flex-end', padding: 24 },
   menuCard: { backgroundColor: colors.surface, borderRadius: 24, padding: 16, width: '100%', maxWidth: 280 },

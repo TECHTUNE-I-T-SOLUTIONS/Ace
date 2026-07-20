@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { GlassCard } from '@/components';
 import { useColors } from '@/theme';
 
+// Generic dropdown filter bar - each screen passes its own filter options
 export function SortFilterBar({
   sort,
   setSort,
@@ -11,6 +12,13 @@ export function SortFilterBar({
   setOrder,
   filters,
   setFilters,
+  sortOptions = [
+    { key: 'created_at', label: 'Date Created' },
+    { key: 'title', label: 'Title' },
+    { key: 'updated_at', label: 'Last Updated' },
+  ],
+  filterOptions = [],
+  filterLabel = 'Filter',
 }: {
   sort: string;
   setSort: (v: string) => void;
@@ -18,21 +26,16 @@ export function SortFilterBar({
   setOrder: (v: 'asc' | 'desc') => void;
   filters: string[];
   setFilters: (v: string[]) => void;
+  sortOptions?: { key: string; label: string }[];
+  filterOptions?: { key: string; label: string }[];
+  filterLabel?: string;
 }) {
   const colors = useColors();
   const [showSortModal, setShowSortModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
-  const sortOptions = [
-    { key: 'created_at', label: 'Date Created' },
-    { key: 'title', label: 'Title' },
-    { key: 'deadline_date', label: 'Deadline' },
-    { key: 'course_code', label: 'Course Code' },
-  ];
-
   const currentSortLabel = sortOptions.find((o) => o.key === sort)?.label || sort;
-  const currentCategory = filters.length > 0 ? filters[0] : 'all';
-  const filterOptions = ['all', 'academic', 'personal', 'urgent'];
+  const currentFilter = filters.length > 0 ? filters[0] : 'all';
 
   return (
     <GlassCard style={[styles.card, { borderColor: colors.border }]}>
@@ -49,12 +52,14 @@ export function SortFilterBar({
           <Ionicons name={order === 'asc' ? 'arrow-up' : 'arrow-down'} size={16} color={colors.primary} />
         </Pressable>
 
-        {/* Category Filter Dropdown */}
-        <Pressable onPress={() => setShowFilterModal(true)} style={[styles.dropdown, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]}>
-          <Ionicons name="funnel-outline" size={16} color={colors.primary} />
-          <Text style={[styles.dropdownText, { color: colors.text }]} numberOfLines={1}>{currentCategory}</Text>
-          <Ionicons name="chevron-down" size={14} color={colors.muted} />
-        </Pressable>
+        {/* Category Filter Dropdown - only show if filter options provided */}
+        {filterOptions.length > 0 && (
+          <Pressable onPress={() => setShowFilterModal(true)} style={[styles.dropdown, { backgroundColor: colors.surfaceSoft, borderColor: colors.border }]}>
+            <Ionicons name="funnel-outline" size={16} color={colors.primary} />
+            <Text style={[styles.dropdownText, { color: colors.text }]} numberOfLines={1}>{currentFilter}</Text>
+            <Ionicons name="chevron-down" size={14} color={colors.muted} />
+          </Pressable>
+        )}
       </View>
 
       {/* Sort Modal */}
@@ -77,23 +82,32 @@ export function SortFilterBar({
       </Modal>
 
       {/* Filter Modal */}
-      <Modal visible={showFilterModal} transparent animationType="fade" onRequestClose={() => setShowFilterModal(false)}>
-        <Pressable style={styles.backdrop} onPress={() => setShowFilterModal(false)}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Filter by Category</Text>
-            {filterOptions.map((opt) => (
+      {filterOptions.length > 0 && (
+        <Modal visible={showFilterModal} transparent animationType="fade" onRequestClose={() => setShowFilterModal(false)}>
+          <Pressable style={styles.backdrop} onPress={() => setShowFilterModal(false)}>
+            <View style={[styles.modalCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>{filterLabel}</Text>
               <Pressable
-                key={opt}
-                onPress={() => { setFilters(opt === 'all' ? [] : [opt]); setShowFilterModal(false); }}
-                style={[styles.modalItem, currentCategory === opt && { backgroundColor: colors.primary + '20' }]}
+                onPress={() => { setFilters([]); setShowFilterModal(false); }}
+                style={[styles.modalItem, currentFilter === 'all' && { backgroundColor: colors.primary + '20' }]}
               >
-                <Text style={[styles.modalItemText, { color: colors.text }, currentCategory === opt && { color: colors.primary }]}>{opt}</Text>
-                {currentCategory === opt && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+                <Text style={[styles.modalItemText, { color: colors.text }, currentFilter === 'all' && { color: colors.primary }]}>All</Text>
+                {currentFilter === 'all' && <Ionicons name="checkmark" size={18} color={colors.primary} />}
               </Pressable>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
+              {filterOptions.map((opt) => (
+                <Pressable
+                  key={opt.key}
+                  onPress={() => { setFilters([opt.key]); setShowFilterModal(false); }}
+                  style={[styles.modalItem, currentFilter === opt.key && { backgroundColor: colors.primary + '20' }]}
+                >
+                  <Text style={[styles.modalItemText, { color: colors.text }, currentFilter === opt.key && { color: colors.primary }]}>{opt.label}</Text>
+                  {currentFilter === opt.key && <Ionicons name="checkmark" size={18} color={colors.primary} />}
+                </Pressable>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
+      )}
     </GlassCard>
   );
 }

@@ -21,6 +21,19 @@ export default function Calendar() {
     apiGet('/calendar/agenda').then(setEvents).catch((error) => showError(error.message));
   }, []);
 
+  // Also fetch courses directly as fallback to ensure they appear on calendar
+  useEffect(() => {
+    apiGet('/courses').then((res: any) => {
+      const courses = res.data ?? res ?? [];
+      if (courses.length > 0 && (!events || events.courses?.length === 0)) {
+        setEvents((current: any) => ({
+          ...current,
+          courses: current?.courses?.length ? current.courses : courses,
+        }));
+      }
+    }).catch(() => {});
+  }, [events?.courses?.length]);
+
   const monthDate = useMemo(() => {
     const base = new Date();
     base.setMonth(base.getMonth() + monthOffset);
@@ -44,17 +57,32 @@ export default function Calendar() {
       map.set(day, [...(map.get(day) ?? []), item]);
     };
     
-    // Add courses with recurring support
+    // Add courses with recurring support - map day_of_week to actual dates in the month
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     (events?.courses ?? []).forEach((item: any) => {
       const dayOfWeek = String(item.day_of_week ?? item.dayOfWeek ?? '');
       if (dayOfWeek) {
-        add(dayOfWeek, { 
-          type: 'class', 
-          title: item.course_title ?? item.courseTitle, 
-          meta: `${item.start_time ?? item.startTime ?? 'TBD'} - ${item.end_time ?? item.endTime ?? 'TBD'}`,
-          id: item.id,
-          day_of_week: dayOfWeek 
-        });
+        // Find all dates in current month that match this day of week
+        const targetDayIndex = dayNames.findIndex(d => d.toLowerCase() === dayOfWeek.toLowerCase());
+        if (targetDayIndex >= 0) {
+          const year = monthDate.getFullYear();
+          const month = monthDate.getMonth();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+          
+          for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            if (date.getDay() === targetDayIndex) {
+              const iso = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+              add(iso, { 
+                type: 'class', 
+                title: item.course_title ?? item.courseTitle, 
+                meta: `${item.start_time ?? item.startTime ?? 'TBD'} - ${item.end_time ?? item.endTime ?? 'TBD'}`,
+                id: item.id,
+                day_of_week: dayOfWeek 
+              });
+            }
+          }
+        }
       }
     });
     
@@ -63,7 +91,7 @@ export default function Calendar() {
     (events?.exams ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'exam', title: item.title, meta: item.time ?? 'TBD', id: item.id }));
     (events?.sessions ?? []).forEach((item: any) => add(String(item.date ?? ''), { type: 'study', title: item.subject, meta: item.start_time ?? '', id: item.id }));
     return map;
-  }, [events]);
+  }, [events, monthDate]);
 
   const selectedKey = selectedDay ? `${monthDate.getFullYear()}-${String(monthDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}` : '';
   const selectedEvents = eventMap.get(selectedKey) ?? [];

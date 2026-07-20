@@ -12,7 +12,18 @@ import { showError, showSuccess } from '../src/toast';
 import { SortFilterBar } from '../src/filters';
 
 const SEMESTER_OPTIONS = ['First Semester', 'Second Semester'];
-const GRADE_POINTS = ['4.00', '3.75', '3.50', '3.25', '3.00', '2.75', '2.50', '2.25', '2.00', '1.00', '0.00'];
+
+// A-F grade system mapped to GPA points (frontend-only, backend still receives GPA)
+const GRADE_OPTIONS = [
+  { label: 'A (70-100)', value: '4.00', min: 70, max: 100 },
+  { label: 'B (60-69)', value: '3.00', min: 60, max: 69 },
+  { label: 'C (50-59)', value: '2.00', min: 50, max: 59 },
+  { label: 'D (45-49)', value: '1.00', min: 45, max: 49 },
+  { label: 'E (40-44)', value: '0.50', min: 40, max: 44 },
+  { label: 'F (0-39)', value: '0.00', min: 0, max: 39 },
+];
+
+const GRADE_POINTS = GRADE_OPTIONS.map(g => g.value);
 
 export default function GradesScreen() {
   const [items, setItems] = useState<any[]>([]);
@@ -77,9 +88,9 @@ export default function GradesScreen() {
     { key: 'credit_units', label: 'Credit Units', type: 'number', placeholder: 'e.g. 3' },
     { 
       key: 'grade_point', 
-      label: 'Grade Point', 
+      label: 'Grade', 
       type: 'select',
-      options: GRADE_POINTS,
+      options: GRADE_OPTIONS.map(g => g.label),
       placeholder: 'Select grade',
     },
   ], [courses]);
@@ -143,11 +154,15 @@ export default function GradesScreen() {
         return;
       }
 
+      // Map A-F grade label back to GPA point for backend
+      const selectedGrade = GRADE_OPTIONS.find(g => draft.grade_point === g.label);
+      const gradePoint = selectedGrade ? parseFloat(selectedGrade.value) : parseFloat(draft.grade_point) || 0;
+
       const payload = {
         course_id: courseId,
         semester: draft.semester,
         credit_units: parseInt(draft.credit_units) || 0,
-        grade_point: parseFloat(draft.grade_point) || 0,
+        grade_point: gradePoint,
       };
 
       if (mode === 'create') {
@@ -179,6 +194,11 @@ export default function GradesScreen() {
     if (gradePoint >= 3.0) return colors.primary;
     if (gradePoint >= 2.0) return colors.warning;
     return colors.danger;
+  };
+
+  const getGradeLabel = (gradePoint: number) => {
+    const grade = GRADE_OPTIONS.find(g => Math.abs(parseFloat(g.value) - gradePoint) < 0.01);
+    return grade ? grade.label.split(' ')[0] : 'F';
   };
 
   const getCourseName = (courseId: string) => {
@@ -228,11 +248,11 @@ export default function GradesScreen() {
               >
                 <GlassCard style={styles.card}>
                   <View style={styles.cardHeader}>
-                    <View style={[styles.gradeBadge, { backgroundColor: gradeColor + '20' }]}>
-                      <Text style={[styles.gradeText, { color: gradeColor }]}>
-                        {parseFloat(item.grade_point).toFixed(2)}
-                      </Text>
-                    </View>
+                  <View style={[styles.gradeBadge, { backgroundColor: gradeColor + '20' }]}>
+                    <Text style={[styles.gradeText, { color: gradeColor }]}>
+                      {getGradeLabel(parseFloat(item.grade_point) || 0)}
+                    </Text>
+                  </View>
                     <View style={styles.semesterBadge}>
                       <Text style={styles.semesterText}>{item.semester}</Text>
                     </View>

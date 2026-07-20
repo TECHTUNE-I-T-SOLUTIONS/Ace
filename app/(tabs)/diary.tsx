@@ -15,6 +15,7 @@ export default function Diary() {
   const [refreshing, setRefreshing] = useState(false);
   const [mode, setMode] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [wordCount, setWordCount] = useState(0);
 
   const load = useCallback(async (isRefresh = false) => {
     try {
@@ -38,6 +39,16 @@ export default function Diary() {
     { key: 'content', label: 'Content', placeholder: 'Write your reflection...', multiline: true },
     { key: 'mood', label: 'Mood', options: ['happy', 'focused', 'stressed', 'neutral'] },
   ], []);
+
+  // Track word count as user types
+  const handleDraftChange = (next: Record<string, string>) => {
+    setDraft(next);
+    if (next.content) {
+      setWordCount(computeWordCount(next.content));
+    } else {
+      setWordCount(0);
+    }
+  };
 
   const submit = async () => {
     if (!supabase) throw new Error('Supabase not configured');
@@ -121,7 +132,7 @@ export default function Diary() {
 
         <View style={styles.sectionRow}>
           <Text style={styles.section}>Recent Reflections</Text>
-          <Pressable onPress={() => setMode(true)} style={styles.addBtn}>
+          <Pressable onPress={() => { setDraft({ title: '', content: '', mood: 'neutral' }); setWordCount(0); setMode(true); }} style={styles.addBtn}>
             <Ionicons name="add" size={18} color={colors.primary} />
             <Text style={styles.addBtnText}>New Entry</Text>
           </Pressable>
@@ -162,7 +173,7 @@ export default function Diary() {
         <Ionicons name="create" size={26} color="#fff" />
       </Pressable>
 
-      <CrudModal visible={mode} title="New Diary Entry" fields={fields} values={draft} onChange={setDraft} onClose={() => setMode(false)} onSubmit={submit} />
+      <CrudModal visible={mode} title="New Diary Entry" fields={fields} values={draft} onChange={handleDraftChange} onClose={() => { setMode(false); setWordCount(0); }} onSubmit={submit} />
     </GradientShell>
   );
 }

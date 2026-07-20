@@ -58,7 +58,8 @@ export default function AiScreen() {
       showError(error.message ?? 'AI request failed');
     } finally {
       setLoading(false);
-      scrollRef.current?.scrollToEnd({ animated: true });
+      // Delay scroll to ensure content is rendered
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
     }
   };
 
@@ -77,8 +78,9 @@ export default function AiScreen() {
         <View style={styles.chatArea}>
           <ScrollView 
             ref={scrollRef}
-            contentContainerStyle={styles.chatContent} 
+            contentContainerStyle={styles.chatContent}
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+            keyboardShouldPersistTaps="handled"
           >
             {history.length === 0 ? (
               <View style={styles.emptyState}>

@@ -184,14 +184,30 @@ export default function Profile() {
             <Text style={styles.statValue}>{analytics?.assignments ?? profile?.assignments_count ?? 0}</Text>
             <Text style={styles.statLabel}>Assignments</Text>
           </GlassCard>
+          {/* <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{analytics?.tests ?? 0}</Text>
+            <Text style={styles.statLabel}>Tests</Text>
+          </GlassCard>
           <GlassCard style={styles.statCard}>
-            <Text style={styles.statValue}>{profile?.gpa || '0.0'}</Text>
-            <Text style={styles.statLabel}>GPA</Text>
+            <Text style={styles.statValue}>{analytics?.exams ?? 0}</Text>
+            <Text style={styles.statLabel}>Exams</Text>
+          </GlassCard> */}
+          {/* <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{analytics?.tasks ?? 0}</Text>
+            <Text style={styles.statLabel}>Tasks</Text>
+          </GlassCard> */}
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{analytics?.attendance ?? 0}</Text>
+            <Text style={styles.statLabel}>Attendance</Text>
           </GlassCard>
           <GlassCard style={styles.statCard}>
             <Text style={styles.statValue}>{profile?.cgpa || profile?.gpa || '0.0'}</Text>
             <Text style={styles.statLabel}>CGPA</Text>
           </GlassCard>
+          {/* <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{profile?.level ? `Level ${profile.level}` : 'N/A'}</Text>
+            <Text style={styles.statLabel}>Level</Text>
+          </GlassCard> */}
         </View>
 
         <GlassCard style={styles.infoCard}>

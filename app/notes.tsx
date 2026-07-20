@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { GradientShell, GlassCard, PrimaryButton } from '../src/components';
@@ -29,6 +29,7 @@ export default function NotesScreen() {
   const [uploading, setUploading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [attachments, setAttachments] = useState<string[]>([]);
 
   const fields = useMemo(() => [
     { key: 'title', label: 'Title', placeholder: 'Lecture Notes' },
@@ -54,8 +55,24 @@ export default function NotesScreen() {
 
   useEffect(() => { load(1, false); }, [sort, order, filters]);
 
-  const openCreate = () => { setSelected(null); setDraft({ title: '', content: '', summary: '', attachments: '' }); setMode('create'); };
-  const openEdit = (item: any) => { setSelected(item); setDraft({ title: item.title ?? '', content: item.content ?? '', summary: item.summary ?? '', attachments: Array.isArray(item.attachments) ? item.attachments.join(', ') : item.attachments ?? '' }); setMode('edit'); };
+  const openCreate = () => { 
+    setSelected(null); 
+    setDraft({ title: '', content: '', summary: '', attachments: '' }); 
+    setAttachments([]);
+    setMode('create'); 
+  };
+  const openEdit = (item: any) => { 
+    setSelected(item); 
+    const attachmentList = Array.isArray(item.attachments) ? item.attachments : (item.attachments ? String(item.attachments).split(',').map((v: string) => v.trim()).filter(Boolean) : []);
+    setDraft({ 
+      title: item.title ?? '', 
+      content: item.content ?? '', 
+      summary: item.summary ?? '', 
+      attachments: attachmentList.join(', ') 
+    });
+    setAttachments(attachmentList);
+    setMode('edit'); 
+  };
   const submit = async () => { const payload = { ...draft, attachments: draft.attachments ? draft.attachments.split(',').map((v) => v.trim()).filter(Boolean) : [] }; if (mode === 'create') await createItem('/notes', payload); if (mode === 'edit' && selected) await updateItem(`/notes/${selected.id}`, payload); setMode(null); await load(1, false); };
   const remove = async (item: any) => { await deleteItem(`/notes/${item.id}`); await load(1, false); };
 
@@ -142,48 +159,83 @@ export default function NotesScreen() {
         onClose={() => setMode(null)} 
         onSubmit={submit}
         customActions={
-          <View style={styles.uploadButtons}>
-            <Pressable 
-              onPress={async () => {
-                setUploading(true);
-                try {
-                  const assets = await pickAttachment();
-                  const uploaded: string[] = [];
-                  for (const asset of assets) {
-                    const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
-                    uploaded.push(url);
+          <View>
+            <View style={styles.uploadButtons}>
+              <Pressable 
+                onPress={async () => {
+                  setUploading(true);
+                  try {
+                    const assets = await pickAttachment();
+                    const uploaded: string[] = [];
+                    for (const asset of assets) {
+                      const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.name ?? 'file'}`);
+                      uploaded.push(url);
+                    }
+                    const newAttachments = [...attachments, ...uploaded];
+                    setAttachments(newAttachments);
+                    setDraft((current) => ({ ...current, attachments: newAttachments.join(', ') }));
+                  } catch (error: any) {
+                    showError(error.message ?? 'Upload failed');
+                  } finally {
+                    setUploading(false);
                   }
-                  setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), ...uploaded].join(', ') }));
-                } catch (error: any) {
-                  showError(error.message ?? 'Upload failed');
-                } finally {
-                  setUploading(false);
-                }
-              }}
-              style={styles.uploadBtn}
-            >
-              <Ionicons name="document-attach-outline" size={18} color={colors.primary} />
-              <Text style={styles.uploadBtnText}>File</Text>
-            </Pressable>
-            <Pressable 
-              onPress={async () => {
-                setUploading(true);
-                try {
-                  const asset = await pickImage();
-                  if (!asset) return;
-                  const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
-                  setDraft((current) => ({ ...current, attachments: [...(current.attachments ? current.attachments.split(',').map((v) => v.trim()).filter(Boolean) : []), url].join(', ') }));
-                } catch (error: any) {
-                  showError(error.message ?? 'Upload failed');
-                } finally {
-                  setUploading(false);
-                }
-              }}
-              style={styles.uploadBtn}
-            >
-              <Ionicons name="image-outline" size={18} color={colors.primary} />
-              <Text style={styles.uploadBtnText}>Image</Text>
-            </Pressable>
+                }}
+                style={styles.uploadBtn}
+              >
+                <Ionicons name="document-attach-outline" size={18} color={colors.primary} />
+                <Text style={styles.uploadBtnText}>File</Text>
+              </Pressable>
+              <Pressable 
+                onPress={async () => {
+                  setUploading(true);
+                  try {
+                    const asset = await pickImage();
+                    if (!asset) return;
+                    const url = await uploadToSupabase('attachments', asset.uri, `notes/${Date.now()}-${asset.fileName ?? 'image'}`);
+                    const newAttachments = [...attachments, url];
+                    setAttachments(newAttachments);
+                    setDraft((current) => ({ ...current, attachments: newAttachments.join(', ') }));
+                  } catch (error: any) {
+                    showError(error.message ?? 'Upload failed');
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+                style={styles.uploadBtn}
+              >
+                <Ionicons name="image-outline" size={18} color={colors.primary} />
+                <Text style={styles.uploadBtnText}>Image</Text>
+              </Pressable>
+            </View>
+
+            {attachments.length > 0 && (
+              <View style={styles.attachmentPreviewContainer}>
+                <Text style={styles.attachmentPreviewTitle}>Attachments ({attachments.length})</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.attachmentPreviewScroll}>
+                  {attachments.map((url, index) => (
+                    <View key={index} style={styles.attachmentPreviewItem}>
+                      <Pressable 
+                        onPress={() => router.push({ pathname: '/attachment-viewer', params: { url } })}
+                        style={styles.attachmentPreviewPressable}
+                      >
+                        <Ionicons name="document-outline" size={24} color={colors.primary} />
+                        <Text style={styles.attachmentPreviewText}>Attachment {index + 1}</Text>
+                      </Pressable>
+                      <Pressable 
+                        onPress={() => {
+                          const newAttachments = attachments.filter((_, i) => i !== index);
+                          setAttachments(newAttachments);
+                          setDraft((current) => ({ ...current, attachments: newAttachments.join(', ') }));
+                        }}
+                        style={styles.attachmentRemoveBtn}
+                      >
+                        <Ionicons name="close-circle" size={20} color={colors.danger} />
+                      </Pressable>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
         }
       />
@@ -211,4 +263,11 @@ const styles = StyleSheet.create({
   attachCount: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(34, 197, 94, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   attachCountText: { color: colors.success, fontSize: 12, fontWeight: '800' },
   empty: { color: '#A6B7D7', textAlign: 'center', marginTop: 60, fontSize: 15 },
+  attachmentPreviewContainer: { marginTop: 12, gap: 8 },
+  attachmentPreviewTitle: { color: '#B7C7E7', fontSize: 12, fontWeight: '800', textTransform: 'uppercase' },
+  attachmentPreviewScroll: { flexDirection: 'row', gap: 10 },
+  attachmentPreviewItem: { position: 'relative', marginRight: 10 },
+  attachmentPreviewPressable: { width: 100, height: 100, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  attachmentPreviewText: { color: '#B7C7E7', fontSize: 10, fontWeight: '700', textAlign: 'center' },
+  attachmentRemoveBtn: { position: 'absolute', top: -8, right: -8, backgroundColor: 'rgba(239, 68, 68, 0.9)', borderRadius: 10, width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
 });

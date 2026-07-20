@@ -79,6 +79,19 @@ export default function CoursesScreen() {
     setMode('edit'); 
   };
   const submit = async () => {
+    // Check for duplicate course in same semester
+    const duplicate = items.find((item: any) => {
+      if (mode === 'edit' && item.id === selected?.id) return false;
+      const itemCourseCode = item.course_code ?? item.courseCode ?? '';
+      const itemSemester = item.semester ?? '';
+      return itemCourseCode.toLowerCase() === draft.course_code.toLowerCase() && itemSemester === draft.semester;
+    });
+    
+    if (duplicate) {
+      showError(`Course "${draft.course_code}" already exists for ${draft.semester}`);
+      return;
+    }
+
     const payload = { ...draft };
     if (mode === 'create') await createItem('/courses', payload);
     if (mode === 'edit' && selected) await updateItem(`/courses/${selected.id}`, payload);
